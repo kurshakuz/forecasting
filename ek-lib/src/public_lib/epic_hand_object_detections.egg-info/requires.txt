@@ -1,0 +1,11 @@
+numpy
+protobuf
+pillow
+
+[demo]
+ipykernel
+ipywidgets
+
+[docs]
+sphinx-autoapi
+sphinx_rtd_theme

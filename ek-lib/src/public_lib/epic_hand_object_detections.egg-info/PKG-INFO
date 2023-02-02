@@ -1,0 +1,24 @@
+Metadata-Version: 2.1
+Name: epic-hand-object-detections
+Version: 0.0.1
+Summary: Hand-object detections for EPIC-100
+Home-page: https://github.com/epic-kitchens/epic-kitchens-100-hand-object-bboxes
+Author: EPIC-Kitchens
+Author-email: will.price94@gmail.com
+License: UNKNOWN
+Project-URL: Bug Reports, https://github.com/epic-kitchens/epic-kitchens-100-hand-object-bboxes/issues
+Project-URL: Source, https://github.com/epic-kitchens/epic-kitchens-100-hand-object-bboxes
+Description: UNKNOWN
+Keywords: EPIC-100 EPIC-55 action-recogition EPIC-kitchens
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3 :: Only
+Requires-Python: >=3.5, <4
+Provides-Extra: demo
+Provides-Extra: docs

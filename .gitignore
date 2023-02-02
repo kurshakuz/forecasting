@@ -1,0 +1,11 @@
+images/
+images_det/
+*.pyc
+*.jpg
+*.mp4
+*.pkl
+detector/lib/build
+*.c
+*.cpp
+*.so
+*.pth
