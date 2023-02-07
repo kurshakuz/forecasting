@@ -531,7 +531,7 @@ if __name__ == '__main__':
                     break
 
         if get_pickle:
-            folder_name = args.save_pkl_dir
+            folder_name = f"./thesis-data/{video_id}/hands-objects"
             os.makedirs(folder_name, exist_ok=True)
             filepath = Path(folder_name) / (video_id + ".pkl")
             save_detections(frame_det_ser, filepath)
