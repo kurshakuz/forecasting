@@ -89,9 +89,9 @@ def parse_args():
                         default="detector/models")
     parser.add_argument('--image_dir', dest='image_dir',
                         help='directory to load images for demo',
-                        default="images")
-    parser.add_argument('--video_link', dest='video_link',
-                    help='video_link')
+                        default="thesis-data")
+    parser.add_argument('--video_id', dest='video_id',
+                    help='video_id')
     parser.add_argument('--save_dir', dest='save_dir',
                         help='directory to save results',
                         default="images_det")
@@ -269,7 +269,7 @@ if __name__ == '__main__':
         thresh_obj = args.thresh_obj
         vis = args.vis
         get_pickle = args.get_pickle
-        image_dir = args.image_dir + '/' + args.video_link
+        image_dir = args.image_dir + '/' + args.video_id + '/rgb_frames'
 
         # print(f'thresh_hand = {thresh_hand}')
         # print(f'thnres_obj = {thresh_obj}')
@@ -510,7 +510,7 @@ if __name__ == '__main__':
                                 ))
 
                     file_name = im_file.split('/')[-1]
-                    video_id = args.video_link
+                    video_id = args.video_id
                     frame_number = int(file_name.split('_')[1].split('.')[0])
 
                     frame_det_ser.append(FrameDetections(
@@ -531,7 +531,7 @@ if __name__ == '__main__':
                     break
 
         if get_pickle:
-            folder_name = f"./thesis-data/{video_id}/hands-objects"
+            folder_name = f"./thesis-data/{video_id}/hand-objects"
             os.makedirs(folder_name, exist_ok=True)
             filepath = Path(folder_name) / (video_id + ".pkl")
             save_detections(frame_det_ser, filepath)
