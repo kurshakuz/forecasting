@@ -10,3 +10,4 @@ detector/lib/build
 *.so
 *.pth
 *.tar
+ego4d/aws/
