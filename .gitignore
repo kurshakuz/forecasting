@@ -11,3 +11,12 @@ detector/lib/build
 *.pth
 *.tar
 ego4d/aws/
+
+*.log
+*.pyc
+ego4d/forecasting/dist/
+*.egg-info
+ego4d/forecasting/lightning_logs/
+.vscode/
+ego4d/forecasting/pretrained_models/
+ego4d/forecasting/data/
