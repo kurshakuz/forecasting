@@ -9,6 +9,6 @@ aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID" && aws configure set aw
 rm "awscliv2.zip"
 
 # Download the Ego4D Annotations to ego4d_data/
-ego4d --output_directory="/workspaces/content/ego4d_data/" --datasets annotations sta_models omnivore_video_swinl_fp16 --benchmarks FHO -y
+ego4d --output_directory="/workspaces/content/ego4d_data/" --datasets annotations full_scale --benchmarks FHO -y
 
-# ls /workspaces/content/ego4d_data/v1/annotations | grep fho
+ls /workspaces/content/ego4d_data/v1/annotations | grep fho
