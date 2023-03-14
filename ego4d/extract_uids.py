@@ -4,7 +4,8 @@ import json
 data = json.load(open("../content/ego4d_data/v1/annotations/fho_hands_train.json"))
 
 # extract objects that contain "contact_frame" instance
-uids = set()
+video_uids = set()
+clip_uids = set()
 fho_data = {
     "version": data["version"],
     "date": data["date"],
@@ -24,7 +25,8 @@ for clip in data["clips"]:
             }
             new_clip["frames"].append(frame)
 
-            uids.add(clip["video_uid"])
+            video_uids.add(clip["video_uid"])
+            clip_uids.add(clip["clip_uid"])
     fho_data["clips"].append(new_clip)
     # break
 
@@ -33,8 +35,11 @@ with open("./fho_hands_train_contact.json", "w") as f:
     json.dump(fho_data, f, indent=2)
 
 # store uids string
-with open("./fho_hands_train_contact_uids.txt", "w") as f:
-    f.write(' '.join(uids))
+with open("./fho_hands_train_contact_video_uids.txt", "w") as f:
+    f.write(' '.join(video_uids))
+
+with open("./fho_hands_train_contact_clip_uids.txt", "w") as f:
+    f.write(' '.join(clip_uids))
 
 # print(uids)
 # json.dumps(contact_clips, indent=2)
