@@ -24,6 +24,11 @@ def generate_video():
             new_height = 256
             new_width = int(img.shape[1] * (new_height / img.shape[0]))
 
+            if os.path.isfile(video_name):
+                continue
+            else:
+                print(f"missing video: {video_name}")
+
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
             out = cv2.VideoWriter(video_name, fourcc, 30, (new_width, new_height))
             for i in range(len(images)):
