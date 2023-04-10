@@ -9,3 +9,4 @@ Data path: /media/dev/HIKVISION/ego4d_data
 export PYTHONPATH=/home/dev/workspace/slowfast/slowfast:$PYTHONPATH
 
 export PYTHONPATH=/home/dev/workspace/thesis-100doh-annotator/ego4d/forecasting/Ego4D-Future-Hand-Prediction/slowfast:$PYTHONPATH
+conda activate slowfast4
