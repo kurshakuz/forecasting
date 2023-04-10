@@ -12,7 +12,7 @@ for clip in data["clips"]:
     clip_id = clip["clip_id"]
     for frame in clip["frames"]:
         frames = []
-        pre_45_frame = frame["pre_45"]["frame"]
+        pre_45_frame = frame["pre_45"]["clip_frame"]
         # get all 60 values after last_observable frame or before pre_frame
         for i in range(pre_45_frame - 60, pre_45_frame):
             frames.append(i)
@@ -24,23 +24,24 @@ for clip in data["clips"]:
             # print(f"missing annotations on {clip_uid}_{clip_id}")
             pass
         try:
-            frames.append(frame["pre_30"]["frame"])
+            frames.append(frame["pre_30"]["clip_frame"])
         except:
             pass
         try:
-            frames.append(frame["pre_15"]["frame"])
+            frames.append(frame["pre_15"]["clip_frame"])
         except:
             pass
         try:
-            frames.append(frame["pre_frame"]["frame"])
+            frames.append(frame["pre_frame"]["clip_frame"])
         except:
             pass
         try:
-            frames.append(frame["contact_frame"]["frame"])
+            frames.append(frame["contact_frame"]["clip_frame"])
         except:
             pass
 
-        file_name = f"{clip_id}_{pre_45_frame-1}.txt"
+        act_frame = frame["pre_45"]["frame"]
+        file_name = f"{clip_id}_{act_frame-1}.txt"
         # print(file_name)
 
         if not os.path.exists(f"{path_to_store}/{clip_uid}"):
