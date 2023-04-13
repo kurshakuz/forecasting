@@ -1,7 +1,7 @@
 import json
 import os
 
-split = "train" # train, val, test_unannotated
+split = "val" # train, val, test_unannotated
 
 # load the JSON data from a file or API response
 data = json.load(open(f"./extracted_files/fho_hands_{split}_all.json"))
