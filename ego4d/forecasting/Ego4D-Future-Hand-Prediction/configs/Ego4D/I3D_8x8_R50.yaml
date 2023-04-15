@@ -5,7 +5,7 @@ TRAIN:
   EVAL_PERIOD: 10
   CHECKPOINT_PERIOD: 10
   AUTO_RESUME: True
-  CHECKPOINT_FILE_PATH: /media/dev/HIKVISION/ego4d-hand_ant/I3D_8x8_R50.pkl
+  CHECKPOINT_FILE_PATH: /home/dev/workspace/thesis-ego4d/results/I3D_8x8_R50.pkl
   CHECKPOINT_TYPE: caffe2
 DATA:
   NUM_FRAMES: 8
@@ -14,7 +14,7 @@ DATA:
   TRAIN_CROP_SIZE: 224
   TEST_CROP_SIZE: 224
   INPUT_CHANNEL_NUM: [3]
-  PATH_TO_DATA_DIR: /media/dev/HIKVISION/ego4d_data
+  PATH_TO_DATA_DIR: /home/dev/workspace/thesis-ego4d/ego4d_data_annot
   PATH_LABEL_SEPARATOR: ' '
   Resolution: 4
 RESNET:
