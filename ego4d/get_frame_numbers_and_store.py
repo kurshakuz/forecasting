@@ -1,10 +1,10 @@
 import json
 import os
 
-split = "val" # train, val, test_unannotated
+split = "train" # train, val, test_unannotated
 
 # load the JSON data from a file or API response
-data = json.load(open(f"./extracted_files/fho_hands_{split}_all.json"))
+data = json.load(open(f"/home/dev/workspace/thesis-ego4d/train_data/content/ego4d_data/v1/annotations/fho_hands_{split}.json"))
 path_to_store = f"/home/dev/workspace/thesis-ego4d/{split}_data/extracted_frame_nums"
 
 for clip in data["clips"]:
