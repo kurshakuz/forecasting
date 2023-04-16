@@ -83,7 +83,7 @@ def train_epoch(
             )
         # Copy the stats from GPU to CPU (sync point).
 
-        loss = loss[0].item() 
+        loss = loss.item() 
         # Update and log stats.
 
         train_meter.update_stats(
