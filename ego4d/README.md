@@ -42,6 +42,9 @@ pip install -e .
 ```
 
 ```shell
+git clone https://github.com/facebookresearch/slowfast
+cd slowfast
+python3 setup.py build develop
 export PYTHONPATH=/home/dev/workspace/thesis-100doh-annotator/ego4d/forecasting/Ego4D-Future-Hand-Prediction/slowfast:$PYTHONPATH
 ```
 
