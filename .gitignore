@@ -22,3 +22,4 @@ ego4d/forecasting/lightning_logs/
 ego4d/forecasting/pretrained_models/
 ego4d/forecasting/data/
 
+.env
