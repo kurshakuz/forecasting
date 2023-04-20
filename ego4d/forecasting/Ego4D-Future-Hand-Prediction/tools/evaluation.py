@@ -40,8 +40,8 @@ def evaluation_val(cfg, model, loader, num_vis, outputdir, plot=False):
 
             labels = labels.cuda()
             masks = masks.cuda()
-        if cfg.MODEL.PRE_TRAINED:
-            inputs = inputs[0]
+        # if cfg.MODEL.PRE_TRAINED:
+        #     inputs = inputs[0]
 
         preds = model(inputs)
         preds = torch.mul(preds, masks).cuda()
@@ -93,8 +93,8 @@ def evaluation_test(cfg, model, loader, num_vis, outputdir, plot=False):
 
             labels = labels.cuda()
             masks = masks.cuda()
-        if cfg.MODEL.PRE_TRAINED:
-            inputs = inputs[0]
+        # if cfg.MODEL.PRE_TRAINED:
+        #     inputs = inputs[0]
 
         preds = model(inputs)
 

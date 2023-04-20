@@ -47,7 +47,6 @@ MODEL:
   MODEL_NAME: ResNet
   LOSS_FUNC: cross_entropy
   DROPOUT_RATE: 0.5
-  PRE_TRAINED: # i3d_r50
 TEST:
   ENABLE: False
   DATASET: ego4dhand
