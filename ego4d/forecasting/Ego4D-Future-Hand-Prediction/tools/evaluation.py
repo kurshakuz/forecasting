@@ -46,8 +46,9 @@ def evaluation_val(cfg, model, loader, num_vis, outputdir, plot=False):
         preds = model(inputs)
         preds = torch.mul(preds, masks).cuda()
 
-        # adjust the scale
-        preds = scaling(cfg, preds, meta[2:4])
+        # adjust the scale 
+        # TODO: Fix that issue
+        # preds = scaling(cfg, preds, meta[2:4])
 
         # Cuda -> CPU
         preds = preds.to("cpu").detach().numpy()
@@ -241,7 +242,7 @@ if __name__ == "__main__":
     parser.add_argument("--cfg_file", default="path_to_config")
     parser.add_argument("--opts", default=None)
     parser.add_argument("--num_vis", default=10)
-    parser.add_argument("--plot", default=True)
+    parser.add_argument("--plot", default=False)
     parser.add_argument("--eval_type", default="val")  # val or test
     args = parser.parse_args()
     cfg = load_config(args)
