@@ -144,7 +144,6 @@ def eval_epoch(val_loader, model, val_meter, cur_epoch, cfg, writer=None):
             labels = labels.cuda()
             masks = masks.cuda()
 
-        preds =  model(inputs)
         preds = model(inputs)
         val_meter.data_toc()
         loss_fun = nn.SmoothL1Loss(reduction="mean",beta=5.0)
@@ -155,7 +154,7 @@ def eval_epoch(val_loader, model, val_meter, cur_epoch, cfg, writer=None):
             )
 
         # Copy the stats from GPU to CPU (sync point).
-        loss = loss[0].item() 
+        loss = loss.item() 
 
         val_meter.iter_toc()
         # # Update and log stats.
