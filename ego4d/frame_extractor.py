@@ -2,7 +2,7 @@ import os
 import cv2
 
 
-split = "val" # train, val, test_unannotated
+split = "test_unannotated" # train, val, test_unannotated
 folder_path = f"/home/dev/workspace/thesis-ego4d/{split}_data/extracted_frame_nums"
 video_path_prefix = f"/home/dev/workspace/thesis-ego4d/{split}_data/content/ego4d_data/v1/clips"
 video_store_path = f"/media/dev/HIKVISION/{split}_data/cropped_videos_ant"
