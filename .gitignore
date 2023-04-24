@@ -39,3 +39,4 @@ eccv-ego4d/forecasting_eval/short_term_anticipation/models/object_detector/last_
 eccv-ego4d/forecasting_eval/short_term_anticipation/data/object_detector.pth
 eccv-ego4d/forecasting_eval/short_term_anticipation/data/slowfast_model.ckpt
 eccv-ego4d/forecasting_eval/short_term_anticipation/data/object_detections.json
+eccv-ego4d/workdir/
