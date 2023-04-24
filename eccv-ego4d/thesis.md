@@ -17,7 +17,7 @@ python3 run_ego4d_hands.py \
 --data_path ./dummy \
 --log_dir ./workdir/ego4d_hands_uniformer_base \
 --output_dir ./workdir/ego4d_hands_uniformer_base \
---batch_size 128 \
+--batch_size 16 \
 --num_sample 1 \
 --num_segments 8 \
 --finetune ./ego4d_fhp_uniformer8x320.pth \
@@ -36,5 +36,5 @@ python3 run_ego4d_hands.py \
 --eval \
 --test_num_segment 1 \
 --test_num_crop 1 \
---test_subset val
+--test_subset val \
 ```

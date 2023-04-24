@@ -23,3 +23,19 @@ ego4d/forecasting/pretrained_models/
 ego4d/forecasting/data/
 
 .env
+
+.idea/
+batch*
+*.out
+*/__pycache__/
+__pycache__/
+eccv-ego4d/forecasting_eval/pretrained_models/
+eccv-ego4d/forecasting_eval/*/*.pth
+eccv-ego4d/forecasting_eval/*/*.ckpt
+eccv-ego4d/forecasting_eval/*/object_detections.json
+eccv-ego4d/forecasting_eval/short_term_anticipation/models/object_detector/*.pth
+eccv-ego4d/forecasting_eval/short_term_anticipation/models/object_detector/inference/*.pth
+eccv-ego4d/forecasting_eval/short_term_anticipation/models/object_detector/last_checkpoint
+eccv-ego4d/forecasting_eval/short_term_anticipation/data/object_detector.pth
+eccv-ego4d/forecasting_eval/short_term_anticipation/data/slowfast_model.ckpt
+eccv-ego4d/forecasting_eval/short_term_anticipation/data/object_detections.json
