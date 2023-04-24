@@ -14,7 +14,6 @@ DATA:
   INPUT_CHANNEL_NUM: [3]
   PATH_TO_DATA_DIR: /media/dev/HIKVISION/ego4d_data_annot
   PATH_LABEL_SEPARATOR: ' '
-  Resolution: 4
 TIMESFORMER:
   ATTENTION_TYPE: 'divided_space_time'
   # PRETRAINED_MODEL: ''

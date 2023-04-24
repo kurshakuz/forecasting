@@ -13,8 +13,7 @@ DATA:
   TEST_CROP_SIZE: 224
   INPUT_CHANNEL_NUM: [3]
   PATH_TO_DATA_DIR: /workspace/ego4d_data_annot
-  PATH_LABEL_SEPARATOR: ' '
-  Resolution: 4
+  # PATH_LABEL_SEPARATOR: ' '
 TIMESFORMER:
   ATTENTION_TYPE: 'divided_space_time'
   # PRETRAINED_MODEL: ''

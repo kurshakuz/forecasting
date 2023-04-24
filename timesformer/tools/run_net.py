@@ -4,8 +4,8 @@
 from timesformer.utils.misc import launch_job
 from timesformer.utils.parser import load_config, parse_args
 
-from tools.test_net import test
-from tools.train_net import train
+from test_net import test
+from train_net import train
 
 
 def get_func(cfg):
