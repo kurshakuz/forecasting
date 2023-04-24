@@ -422,7 +422,7 @@ def main(args, ds_init):
             raise NotImplementedError
 
         test_stats = final_test(dl, model, device, args)
-        torch.distributed.barrier()
+        # torch.distributed.barrier()
         # if global_rank == 0:
         #     print("Start merging results...")
         #     final_top1, final_top5 = merge(args.output_dir, num_tasks)
@@ -494,7 +494,7 @@ def main(args, ds_init):
         raise NotImplementedError
 
     test_stats = final_test(dl, model, device, args)
-    torch.distributed.barrier()
+    # torch.distributed.barrier()
     # if global_rank == 0:
     #     print("Start merging results...")
     #     final_top1, final_top5 = merge(args.output_dir, num_tasks)
