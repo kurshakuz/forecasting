@@ -19,8 +19,11 @@ NOUN_VALIDATION_ANNO_PATH = "./ego4d_annotations/pretrain/ego4d_noun_cls_val.txt
 PRETRAIN_VIDEO_PATH = "DATA/TO/PATH"
 
 #  ego4d for hands
-annot_folder = "/home/dev/workspace/thesis-ego4d/annotations/"
-dataser_folder = "/media/dev/HIKVISION/ego4d_data_annot"
+# annot_folder = "/home/dev/workspace/thesis-ego4d/annotations/"
+# dataser_folder = "/media/dev/HIKVISION/ego4d_data_annot"
+annot_folder = "/workspace/ego4d_data_annot/annotations/"
+dataser_folder = "/workspace/ego4d_data_annot"
+
 HANDS_TRAINING_ANNO_PATH = annot_folder + "fho_hands_train.json"
 HANDS_VALIDATION_ANNO_PATH = annot_folder + "fho_hands_val.json"
 HANDS_TESTING_ANNO_PATH = annot_folder + "fho_hands_test_unannotated.json"

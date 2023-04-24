@@ -6,6 +6,10 @@ Open `modeling_finetune_uniformer_ego4d.py` and modify the line `497` and change
 
 Open `datasets.py` and modify lines `22-23` and change path variables.
 
+```
+mkdir -r /workspace/thesis-ego4d/eccv-models/
+```
+
 ## Run evaluation script
 
 ```bash
@@ -20,7 +24,7 @@ python3 run_ego4d_hands.py \
 --batch_size 16 \
 --num_sample 1 \
 --num_segments 8 \
---finetune ./ego4d_fhp_uniformer8x320.pth \
+--finetune /home/dev/workspace/thesis-ego4d/eccv-models/ego4d_fhp_uniformer8x320.pth \
 --warmup_epochs  1 \
 --input_size 320 \
 --short_side_size 320 \
