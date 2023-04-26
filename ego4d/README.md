@@ -69,3 +69,11 @@ Data path: /media/dev/HIKVISION/ego4d_data
 ```
 python3 tools/evaluation.py --cfg $WRK/thesis-ws/ego4d/forecasting/Ego4D-Future-Hand-Prediction/configs/Ego4D/I3D_8x8_R50_vast_3090_eval.yaml
 ```
+
+### Generate test result and submission
+```
+python3 /workspace/thesis-ws/ego4d/forecasting/Ego4D-Future-Hand-Prediction/tools/run_net.py --cfg /workspace/thesis-ws/ego4d/forecasting/Ego4D-Future-Hand-Prediction/configs/Ego4D/I3D_8x8_R50_vast_3090_eval.yaml
+```
+```
+python3 /workspace/thesis-ws/ego4d/forecasting/Ego4D-Future-Hand-Prediction/tools/generate_submission.py --num_clips 30 --output_file ./output.pkl
+```
