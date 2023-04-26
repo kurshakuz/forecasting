@@ -14,7 +14,7 @@ import slowfast.utils.logging as logging
 logger = logging.get_logger(__name__)
 
 # model_path = '/mnt/lustre/share_data/likunchang.vendor/model'
-MODEL_PATH = '/workspace'
+model_path = '/workspace'
 model_path = {
     'uniformer_small_k400_16x4': os.path.join(model_path, 'uniformer_small_k400_16x4.pth'),
     'uniformer_small_k600_16x4': os.path.join(model_path, 'uniformer_small_k600_16x4.pth'),
