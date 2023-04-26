@@ -7,11 +7,10 @@ MODEL_PATH='./ego4d_fhp_uniformer8x320.pth' #the pre-loaded weights for fine-tun
 
 
 # batch_size can be adjusted according to the graphics card
-# OMP_NUM_THREADS=1 
-python3 -m torch.distributed.launch --nproc_per_node=8 \
+OMP_NUM_THREADS=1 python3 -m torch.distributed.launch --nproc_per_node=8 \
         --master_port 12320 --nnodes=8 \
         --node_rank=0 --master_addr=12321 \
-        run_ego4d_hands.py \
+    run_ego4d_hands.py \
     --model uniformer_base_256_ego4d_finetune \
     --nb_verb_classes 20 \
     --nb_noun_classes 0 \
