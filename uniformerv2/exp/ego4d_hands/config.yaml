@@ -12,7 +12,7 @@ DATA:
   TRAIN_CROP_SIZE: 224
   TEST_CROP_SIZE: 224
   INPUT_CHANNEL_NUM: [3]
-  PATH_TO_DATA_DIR: /media/dev/HIKVISION/ego4d_data_annot_w_test
+  PATH_TO_DATA_DIR: /workspace/ego4d_data_annot
   PATH_LABEL_SEPARATOR: ' '
 UNIFORMERV2:
   BACKBONE: 'uniformerv2_l14'
