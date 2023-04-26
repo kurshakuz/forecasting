@@ -45,7 +45,7 @@ pip install -e .
 git clone https://github.com/facebookresearch/slowfast
 cd slowfast
 python3 setup.py build develop
-export PYTHONPATH=/home/dev/workspace/thesis-100doh-annotator/ego4d/forecasting/Ego4D-Future-Hand-Prediction/slowfast:$PYTHONPATH
+export PYTHONPATH=$WRK/thesis-ws/ego4d/forecasting/Ego4D-Future-Hand-Prediction/slowfast:$PYTHONPATH
 ```
 
 ### Start training
@@ -57,10 +57,15 @@ cd forecasting/Ego4D-Future-Hand-Prediction/
 
 Run the following command to start training.
 ```shell
-python3 tools/run_net.py --cfg /home/dev/workspace/thesis-100doh-annotator/ego4d/forecasting/Ego4D-Future-Hand-Prediction/configs/Ego4D/I3D_8x8_R50.yaml OUTPUT_DIR /home/dev/workspace/thesis-ego4d/results/output/
+python3 tools/run_net.py --cfg $WRK/thesis-ws/ego4d/forecasting/Ego4D-Future-Hand-Prediction/configs/Ego4D/I3D_8x8_R50.yaml OUTPUT_DIR $WRK/thesis-ego4d/results/output/
 ```
 
 Change values in the `I3D_8x8_R50.yaml` depending on the data location:
 ```
 Data path: /media/dev/HIKVISION/ego4d_data
+```
+
+### Evaluation and Visualization:
+```
+python3 tools/evaluation.py --cfg $WRK/thesis-ws/ego4d/forecasting/Ego4D-Future-Hand-Prediction/configs/Ego4D/I3D_8x8_R50_vast_3090_eval.yaml
 ```

@@ -8,11 +8,12 @@ sudo apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
 # Download data
 pip install gdown
 sudo apt-get install unzip -y
-gdown $DRIVE_LINK
+gdown "$DRIVE_LINK&confirm=t"
 unzip /workspace/ego4d_data_annot.zip -d /workspace
 # rm $PWD/ego4d_data_annot.zip
 
 # Clone thesis repository
+cd /workspace/
 test -e thesis-ws || git clone https://github.com/kurshakuz/thesis-ws.git
 cd /workspace/thesis-ws/
 git pull
