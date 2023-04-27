@@ -101,8 +101,10 @@ def train_epoch(
 
         # Gather all the predictions across all the devices.
         if cfg.NUM_GPUS > 1:
-            [loss] = du.all_reduce([loss])
-        loss = loss.item()
+            loss = du.all_reduce([loss])
+
+        # Copy the stats from GPU to CPU (sync point).
+        loss = loss[0].item()
 
         # Update and log stats.
         train_meter.update_stats(
@@ -168,9 +170,7 @@ def eval_epoch(val_loader, model, val_meter, loss_scaler, cur_epoch, cfg, writer
         loss_fun = nn.SmoothL1Loss(reduction="mean",beta=5.0)
         loss = loss_fun(preds, labels)
         if cfg.NUM_GPUS > 1:
-            loss = du.all_reduce(
-                [loss]
-            )
+            loss = du.all_reduce([loss])
 
         # Copy the stats from GPU to CPU (sync point).
         loss = loss[0].item() 
