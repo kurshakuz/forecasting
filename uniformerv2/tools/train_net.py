@@ -60,7 +60,7 @@ def train_epoch(
             num_classes=cfg.MODEL.NUM_CLASSES,
         )
 
-    for cur_iter, (inputs, labels, masks,_, meta) in enumerate(train_loader):
+    for cur_iter, (inputs, labels, masks, _, meta) in enumerate(train_loader):
         # Transfer the data to the current GPU device.
         if cfg.NUM_GPUS:
             if isinstance(inputs, (list,)):
@@ -220,12 +220,6 @@ def eval_epoch(val_loader, model, val_meter, loss_scaler, cur_epoch, cfg, writer
                 inputs = inputs.cuda(non_blocking=True)
             labels = labels.cuda()
             masks = masks.cuda()
-            for key, val in meta.items():
-                if isinstance(val, (list,)):
-                    for i in range(len(val)):
-                        val[i] = val[i].cuda(non_blocking=True)
-                else:
-                    meta[key] = val.cuda(non_blocking=True)
 
         preds = model(inputs)
         val_meter.data_toc()
