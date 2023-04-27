@@ -98,79 +98,30 @@ def train_epoch(
         # scaler => backward and step
         is_second_order = hasattr(optimizer, 'is_second_order') and optimizer.is_second_order
         loss_scaler(loss, optimizer, clip_grad=cfg.SOLVER.CLIP_GRADIENT, parameters=model.parameters(), create_graph=is_second_order)
-        
-        if cfg.MIXUP.ENABLE:
-            _top_max_k_vals, top_max_k_inds = torch.topk(
-                labels, 2, dim=1, largest=True, sorted=True
+
+        # Gather all the predictions across all the devices.
+        if cfg.NUM_GPUS > 1:
+            [loss] = du.all_reduce([loss])
+        loss = loss.item()
+
+        # Update and log stats.
+        train_meter.update_stats(
+            loss,
+            lr,
+            inputs[0].size(0)
+            * max(
+                cfg.NUM_GPUS, 1
+            ),  # If running  on CPU (cfg.NUM_GPUS == 1), use 1 to represent 1 CPU.
+        )
+        # write to tensorboard format if available.
+        if writer is not None:
+            writer.add_scalars(
+                {
+                    "Train/loss": loss,
+                    "Train/lr": lr,
+                },
+                global_step=data_size * cur_epoch + cur_iter,
             )
-            idx_top1 = torch.arange(labels.shape[0]), top_max_k_inds[:, 0]
-            idx_top2 = torch.arange(labels.shape[0]), top_max_k_inds[:, 1]
-            preds[idx_top1] += preds[idx_top2]
-            preds[idx_top2] = 0.0
-            labels = top_max_k_inds[:, 0]
-
-        if cfg.DETECTION.ENABLE:
-            if cfg.NUM_GPUS > 1:
-                loss = du.all_reduce([loss])[0]
-            loss = loss.item()
-
-            # Update and log stats.
-            train_meter.update_stats(None, None, None, loss, lr)
-            # write to tensorboard format if available.
-            if writer is not None:
-                writer.add_scalars(
-                    {"Train/loss": loss, "Train/lr": lr},
-                    global_step=data_size * cur_epoch + cur_iter,
-                )
-
-        else:
-            top1_err, top5_err = None, None
-            if cfg.DATA.MULTI_LABEL:
-                # Gather all the predictions across all the devices.
-                if cfg.NUM_GPUS > 1:
-                    [loss] = du.all_reduce([loss])
-                loss = loss.item()
-            else:
-                # Compute the errors.
-                num_topks_correct = metrics.topks_correct(preds, labels, (1, 5))
-                top1_err, top5_err = [
-                    (1.0 - x / preds.size(0)) * 100.0 for x in num_topks_correct
-                ]
-                # Gather all the predictions across all the devices.
-                if cfg.NUM_GPUS > 1:
-                    loss, top1_err, top5_err = du.all_reduce(
-                        [loss, top1_err, top5_err]
-                    )
-
-                # Copy the stats from GPU to CPU (sync point).
-                loss, top1_err, top5_err = (
-                    loss.item(),
-                    top1_err.item(),
-                    top5_err.item(),
-                )
-
-            # Update and log stats.
-            train_meter.update_stats(
-                top1_err,
-                top5_err,
-                loss,
-                lr,
-                inputs[0].size(0)
-                * max(
-                    cfg.NUM_GPUS, 1
-                ),  # If running  on CPU (cfg.NUM_GPUS == 1), use 1 to represent 1 CPU.
-            )
-            # write to tensorboard format if available.
-            if writer is not None:
-                writer.add_scalars(
-                    {
-                        "Train/loss": loss,
-                        "Train/lr": lr,
-                        "Train/Top1_err": top1_err,
-                        "Train/Top5_err": top5_err,
-                    },
-                    global_step=data_size * cur_epoch + cur_iter,
-                )
 
         train_meter.iter_toc()  # measure allreduce for this meter
         train_meter.log_iter_stats(cur_epoch, cur_iter)
