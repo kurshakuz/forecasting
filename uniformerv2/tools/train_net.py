@@ -70,12 +70,6 @@ def train_epoch(
                 inputs = inputs.cuda(non_blocking=True)
             labels = labels.cuda()
             masks = masks.cuda()
-            for key, val in meta.items():
-                if isinstance(val, (list,)):
-                    for i in range(len(val)):
-                        val[i] = val[i].cuda(non_blocking=True)
-                else:
-                    meta[key] = val.cuda(non_blocking=True)
 
         # Update the learning rate.
         lr = optim.get_epoch_lr(cur_epoch + float(cur_iter) / data_size, cfg)
@@ -87,11 +81,8 @@ def train_epoch(
             inputs[0] = samples
 
         with torch.cuda.amp.autocast():
-            if cfg.DETECTION.ENABLE:
-                preds = model(inputs, meta["boxes"])
-            else:
-                preds = model(inputs)
-                preds = torch.mul(preds, masks).cuda()
+            preds = model(inputs)
+            preds = torch.mul(preds, masks).cuda()
             # Explicitly declare reduction to mean.
             # loss_fun = losses.get_loss_func(cfg.MODEL.LOSS_FUNC)(reduction="mean")
             loss_fun = nn.SmoothL1Loss(reduction="mean",beta=5.0)
