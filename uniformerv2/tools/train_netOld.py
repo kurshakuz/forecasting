@@ -6,7 +6,6 @@
 import numpy as np
 import pprint
 import torch
-import torch.nn as nn
 from fvcore.nn.precise_bn import get_bn_modules, update_bn_stats
 from timm.utils import NativeScaler
 
@@ -60,7 +59,7 @@ def train_epoch(
             num_classes=cfg.MODEL.NUM_CLASSES,
         )
 
-    for cur_iter, (inputs, labels, masks,_, meta) in enumerate(train_loader):
+    for cur_iter, (inputs, labels, _, meta) in enumerate(train_loader):
         # Transfer the data to the current GPU device.
         if cfg.NUM_GPUS:
             if isinstance(inputs, (list,)):
@@ -69,7 +68,6 @@ def train_epoch(
             else:
                 inputs = inputs.cuda(non_blocking=True)
             labels = labels.cuda()
-            masks = masks.cuda()
             for key, val in meta.items():
                 if isinstance(val, (list,)):
                     for i in range(len(val)):
@@ -91,10 +89,8 @@ def train_epoch(
                 preds = model(inputs, meta["boxes"])
             else:
                 preds = model(inputs)
-                preds = torch.mul(preds, masks).cuda()
             # Explicitly declare reduction to mean.
-            # loss_fun = losses.get_loss_func(cfg.MODEL.LOSS_FUNC)(reduction="mean")
-            loss_fun = nn.SmoothL1Loss(reduction="mean",beta=5.0)
+            loss_fun = losses.get_loss_func(cfg.MODEL.LOSS_FUNC)(reduction="mean")
 
             # Compute the loss.
             loss = loss_fun(preds, labels)
@@ -210,7 +206,7 @@ def eval_epoch(val_loader, model, val_meter, loss_scaler, cur_epoch, cfg, writer
     model.eval()
     val_meter.iter_tic()
 
-    for cur_iter, (inputs, labels, masks,_, meta) in enumerate(val_loader):
+    for cur_iter, (inputs, labels, _, meta) in enumerate(val_loader):
         if cfg.NUM_GPUS:
             # Transferthe data to the current GPU device.
             if isinstance(inputs, (list,)):
@@ -219,37 +215,73 @@ def eval_epoch(val_loader, model, val_meter, loss_scaler, cur_epoch, cfg, writer
             else:
                 inputs = inputs.cuda(non_blocking=True)
             labels = labels.cuda()
-            masks = masks.cuda()
             for key, val in meta.items():
                 if isinstance(val, (list,)):
                     for i in range(len(val)):
                         val[i] = val[i].cuda(non_blocking=True)
                 else:
                     meta[key] = val.cuda(non_blocking=True)
-
-        preds = model(inputs)
         val_meter.data_toc()
-        loss_fun = nn.SmoothL1Loss(reduction="mean",beta=5.0)
-        loss = loss_fun(preds, labels)
-        if cfg.NUM_GPUS > 1:
-            loss = du.all_reduce(
-                [loss]
-            )
 
-        # Copy the stats from GPU to CPU (sync point).
-        loss = loss.item() 
+        if cfg.DETECTION.ENABLE:
+            # Compute the predictions.
+            preds = model(inputs, meta["boxes"])
+            ori_boxes = meta["ori_boxes"]
+            metadata = meta["metadata"]
 
-        val_meter.iter_toc()
-        # # Update and log stats.
-        val_meter.update_stats(
-            loss,
-            inputs[0].size(0)
-            * max(
-                cfg.NUM_GPUS, 1
-            ),  # If running  on CPU (cfg.NUM_GPUS == 1), use 1 to represent 1 CPU.
-        )
+            if cfg.NUM_GPUS:
+                preds = preds.cpu()
+                ori_boxes = ori_boxes.cpu()
+                metadata = metadata.cpu()
 
-        val_meter.update_predictions(preds, labels)
+            if cfg.NUM_GPUS > 1:
+                preds = torch.cat(du.all_gather_unaligned(preds), dim=0)
+                ori_boxes = torch.cat(du.all_gather_unaligned(ori_boxes), dim=0)
+                metadata = torch.cat(du.all_gather_unaligned(metadata), dim=0)
+
+            val_meter.iter_toc()
+            # Update and log stats.
+            val_meter.update_stats(preds, ori_boxes, metadata)
+
+        else:
+            preds = model(inputs)
+
+            if cfg.DATA.MULTI_LABEL:
+                if cfg.NUM_GPUS > 1:
+                    preds, labels = du.all_gather([preds, labels])
+            else:
+                # Compute the errors.
+                num_topks_correct = metrics.topks_correct(preds, labels, (1, 5))
+
+                # Combine the errors across the GPUs.
+                top1_err, top5_err = [
+                    (1.0 - x / preds.size(0)) * 100.0 for x in num_topks_correct
+                ]
+                if cfg.NUM_GPUS > 1:
+                    top1_err, top5_err = du.all_reduce([top1_err, top5_err])
+
+                # Copy the errors from GPU to CPU (sync point).
+                top1_err, top5_err = top1_err.item(), top5_err.item()
+
+                val_meter.iter_toc()
+                # Update and log stats.
+                val_meter.update_stats(
+                    top1_err,
+                    top5_err,
+                    inputs[0].size(0)
+                    * max(
+                        cfg.NUM_GPUS, 1
+                    ),  # If running  on CPU (cfg.NUM_GPUS == 1), use 1 to represent 1 CPU.
+                )
+                # write to tensorboard format if available.
+                if writer is not None:
+                    writer.add_scalars(
+                        {"Val/Top1_err": top1_err, "Val/Top5_err": top5_err},
+                        global_step=len(val_loader) * cur_epoch + cur_iter,
+                    )
+
+            val_meter.update_predictions(preds, labels)
+
         val_meter.log_iter_stats(cur_epoch, cur_iter)
         val_meter.iter_tic()
 
@@ -258,22 +290,27 @@ def eval_epoch(val_loader, model, val_meter, loss_scaler, cur_epoch, cfg, writer
 
     # write to tensorboard format if available.
     if writer is not None:
-        all_preds = [pred.clone().detach() for pred in val_meter.all_preds]
-        all_labels = [
-            label.clone().detach() for label in val_meter.all_labels
-        ]
-        if cfg.NUM_GPUS:
-            all_preds = [pred.cpu() for pred in all_preds]
-            all_labels = [label.cpu() for label in all_labels]
-        writer.plot_eval(
-            preds=all_preds, labels=all_labels, global_step=cur_epoch
-        )
+        if cfg.DETECTION.ENABLE:
+            writer.add_scalars(
+                {"Val/mAP": val_meter.full_map}, global_step=cur_epoch
+            )
+        else:
+            all_preds = [pred.clone().detach() for pred in val_meter.all_preds]
+            all_labels = [
+                label.clone().detach() for label in val_meter.all_labels
+            ]
+            if cfg.NUM_GPUS:
+                all_preds = [pred.cpu() for pred in all_preds]
+                all_labels = [label.cpu() for label in all_labels]
+            writer.plot_eval(
+                preds=all_preds, labels=all_labels, global_step=cur_epoch
+            )
 
     val_meter.reset()
     return flag
 
 
-def calculate_and_update_precise_bn(loader, model, cfg, num_iters=200, use_gpu=True):
+def calculate_and_update_precise_bn(loader, model, num_iters=200, use_gpu=True):
     """
     Update the stats in bn layers by calculate the precise stats.
     Args:
@@ -284,14 +321,13 @@ def calculate_and_update_precise_bn(loader, model, cfg, num_iters=200, use_gpu=T
     """
 
     def _gen_loader():
-        for inputs, labels, masks,_, meta in loader:
+        for inputs, *_ in loader:
             if use_gpu:
                 if isinstance(inputs, (list,)):
                     for i in range(len(inputs)):
                         inputs[i] = inputs[i].cuda(non_blocking=True)
                 else:
                     inputs = inputs.cuda(non_blocking=True)
-                labels = labels.cuda()
             yield inputs
 
     # Update the bn stats.
