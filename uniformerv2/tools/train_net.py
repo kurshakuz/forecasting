@@ -173,6 +173,7 @@ def eval_epoch(val_loader, model, val_meter, loss_scaler, cur_epoch, cfg, writer
             )
 
         # Copy the stats from GPU to CPU (sync point).
+        print("loss", loss)
         loss = loss.item() 
 
         val_meter.iter_toc()
@@ -381,54 +382,55 @@ def train(cfg):
 
         # Train for one epoch.
         epoch_timer.epoch_tic()
-        train_epoch(
-            train_loader, model, optimizer, loss_scaler, train_meter, cur_epoch, cfg, writer
-        )
-        epoch_timer.epoch_toc()
-        logger.info(
-            f"Epoch {cur_epoch} takes {epoch_timer.last_epoch_time():.2f}s. Epochs "
-            f"from {start_epoch} to {cur_epoch} take "
-            f"{epoch_timer.avg_epoch_time():.2f}s in average and "
-            f"{epoch_timer.median_epoch_time():.2f}s in median."
-        )
-        logger.info(
-            f"For epoch {cur_epoch}, each iteraction takes "
-            f"{epoch_timer.last_epoch_time()/len(train_loader):.2f}s in average. "
-            f"From epoch {start_epoch} to {cur_epoch}, each iteraction takes "
-            f"{epoch_timer.avg_epoch_time()/len(train_loader):.2f}s in average."
-        )
+        # train_epoch(
+        #     train_loader, model, optimizer, loss_scaler, train_meter, cur_epoch, cfg, writer
+        # )
+        flag = eval_epoch(val_loader, model, val_meter, loss_scaler, cur_epoch, cfg, writer)
+        # epoch_timer.epoch_toc()
+        # logger.info(
+        #     f"Epoch {cur_epoch} takes {epoch_timer.last_epoch_time():.2f}s. Epochs "
+        #     f"from {start_epoch} to {cur_epoch} take "
+        #     f"{epoch_timer.avg_epoch_time():.2f}s in average and "
+        #     f"{epoch_timer.median_epoch_time():.2f}s in median."
+        # )
+        # logger.info(
+        #     f"For epoch {cur_epoch}, each iteraction takes "
+        #     f"{epoch_timer.last_epoch_time()/len(train_loader):.2f}s in average. "
+        #     f"From epoch {start_epoch} to {cur_epoch}, each iteraction takes "
+        #     f"{epoch_timer.avg_epoch_time()/len(train_loader):.2f}s in average."
+        # )
 
-        is_checkp_epoch = cu.is_checkpoint_epoch(
-            cfg,
-            cur_epoch,
-            None if multigrid is None else multigrid.schedule,
-        )
-        is_eval_epoch = misc.is_eval_epoch(
-            cfg, cur_epoch, None if multigrid is None else multigrid.schedule
-        )
+        # is_checkp_epoch = cu.is_checkpoint_epoch(
+        #     cfg,
+        #     cur_epoch,
+        #     None if multigrid is None else multigrid.schedule,
+        # )
+        # is_eval_epoch = misc.is_eval_epoch(
+        #     cfg, cur_epoch, None if multigrid is None else multigrid.schedule
+        # )
 
-        # Compute precise BN stats.
-        if (
-            (is_checkp_epoch or is_eval_epoch)
-            and cfg.BN.USE_PRECISE_STATS
-            and len(get_bn_modules(model)) > 0
-        ):
-            calculate_and_update_precise_bn(
-                precise_bn_loader,
-                model,
-                min(cfg.BN.NUM_BATCHES_PRECISE, len(precise_bn_loader)),
-                cfg.NUM_GPUS > 0,
-            )
-        _ = misc.aggregate_sub_bn_stats(model)
+        # # Compute precise BN stats.
+        # if (
+        #     (is_checkp_epoch or is_eval_epoch)
+        #     and cfg.BN.USE_PRECISE_STATS
+        #     and len(get_bn_modules(model)) > 0
+        # ):
+        #     calculate_and_update_precise_bn(
+        #         precise_bn_loader,
+        #         model,
+        #         min(cfg.BN.NUM_BATCHES_PRECISE, len(precise_bn_loader)),
+        #         cfg.NUM_GPUS > 0,
+        #     )
+        # _ = misc.aggregate_sub_bn_stats(model)
 
-        # Save a checkpoint.
-        if is_checkp_epoch or cfg.TRAIN.SAVE_LATEST:
-            cu.save_checkpoint(cfg.OUTPUT_DIR, model, optimizer, loss_scaler, cur_epoch, cfg)
-        # Evaluate the model on validation set.
-        if is_eval_epoch:
-            flag = eval_epoch(val_loader, model, val_meter, loss_scaler, cur_epoch, cfg, writer)
-            if flag:
-                cu.save_best_checkpoint(cfg.OUTPUT_DIR, model, optimizer, loss_scaler, cur_epoch, cfg)
+        # # Save a checkpoint.
+        # if is_checkp_epoch or cfg.TRAIN.SAVE_LATEST:
+        #     cu.save_checkpoint(cfg.OUTPUT_DIR, model, optimizer, loss_scaler, cur_epoch, cfg)
+        # # Evaluate the model on validation set.
+        # if is_eval_epoch:
+        #     flag = eval_epoch(val_loader, model, val_meter, loss_scaler, cur_epoch, cfg, writer)
+        #     if flag:
+        #         cu.save_best_checkpoint(cfg.OUTPUT_DIR, model, optimizer, loss_scaler, cur_epoch, cfg)
 
     if writer is not None:
         writer.close()
