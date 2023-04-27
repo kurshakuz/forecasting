@@ -11,222 +11,11 @@ import torch
 from fvcore.common.timer import Timer
 from sklearn.metrics import average_precision_score
 
-import slowfast.datasets.ava_helper as ava_helper
 import slowfast.utils.logging as logging
 import slowfast.utils.metrics as metrics
 import slowfast.utils.misc as misc
-from slowfast.utils.ava_eval_helper import (
-    evaluate_ava,
-    read_csv,
-    read_exclusions,
-    read_labelmap,
-)
 
 logger = logging.get_logger(__name__)
-
-
-def get_ava_mini_groundtruth(full_groundtruth):
-    """
-    Get the groundtruth annotations corresponding the "subset" of AVA val set.
-    We define the subset to be the frames such that (second % 4 == 0).
-    We optionally use subset for faster evaluation during training
-    (in order to track training progress).
-    Args:
-        full_groundtruth(dict): list of groundtruth.
-    """
-    ret = [defaultdict(list), defaultdict(list), defaultdict(list)]
-
-    for i in range(3):
-        for key in full_groundtruth[i].keys():
-            if int(key.split(",")[1]) % 4 == 0:
-                ret[i][key] = full_groundtruth[i][key]
-    return ret
-
-
-class AVAMeter(object):
-    """
-    Measure the AVA train, val, and test stats.
-    """
-
-    def __init__(self, overall_iters, cfg, mode):
-        """
-        overall_iters (int): the overall number of iterations of one epoch.
-        cfg (CfgNode): configs.
-        mode (str): `train`, `val`, or `test` mode.
-        """
-        self.cfg = cfg
-        self.lr = None
-        self.loss = ScalarMeter(cfg.LOG_PERIOD)
-        self.full_ava_test = cfg.AVA.FULL_TEST_ON_VAL
-        self.mode = mode
-        self.iter_timer = Timer()
-        self.data_timer = Timer()
-        self.net_timer = Timer()
-        self.all_preds = []
-        self.all_ori_boxes = []
-        self.all_metadata = []
-        self.overall_iters = overall_iters
-        self.excluded_keys = read_exclusions(
-            os.path.join(cfg.AVA.ANNOTATION_DIR, cfg.AVA.EXCLUSION_FILE)
-        )
-        self.categories, self.class_whitelist = read_labelmap(
-            os.path.join(cfg.AVA.ANNOTATION_DIR, cfg.AVA.LABEL_MAP_FILE)
-        )
-        gt_filename = os.path.join(
-            cfg.AVA.ANNOTATION_DIR, cfg.AVA.GROUNDTRUTH_FILE
-        )
-        self.full_groundtruth = read_csv(gt_filename, self.class_whitelist)
-        self.mini_groundtruth = get_ava_mini_groundtruth(self.full_groundtruth)
-
-        _, self.video_idx_to_name = ava_helper.load_image_lists(
-            cfg, mode == "train"
-        )
-        self.output_dir = cfg.OUTPUT_DIR
-
-    def log_iter_stats(self, cur_epoch, cur_iter):
-        """
-        Log the stats.
-        Args:
-            cur_epoch (int): the current epoch.
-            cur_iter (int): the current iteration.
-        """
-
-        if (cur_iter + 1) % self.cfg.LOG_PERIOD != 0:
-            return
-
-        eta_sec = self.iter_timer.seconds() * (self.overall_iters - cur_iter)
-        eta = str(datetime.timedelta(seconds=int(eta_sec)))
-        if self.mode == "train":
-            stats = {
-                "_type": "{}_iter".format(self.mode),
-                "cur_epoch": "{}".format(cur_epoch + 1),
-                "cur_iter": "{}".format(cur_iter + 1),
-                "eta": eta,
-                "dt": self.iter_timer.seconds(),
-                "dt_data": self.data_timer.seconds(),
-                "dt_net": self.net_timer.seconds(),
-                "mode": self.mode,
-                "loss": self.loss.get_win_median(),
-                "lr": self.lr,
-            }
-        elif self.mode == "val":
-            stats = {
-                "_type": "{}_iter".format(self.mode),
-                "cur_epoch": "{}".format(cur_epoch + 1),
-                "cur_iter": "{}".format(cur_iter + 1),
-                "eta": eta,
-                "dt": self.iter_timer.seconds(),
-                "dt_data": self.data_timer.seconds(),
-                "dt_net": self.net_timer.seconds(),
-                "mode": self.mode,
-            }
-        elif self.mode == "test":
-            stats = {
-                "_type": "{}_iter".format(self.mode),
-                "cur_iter": "{}".format(cur_iter + 1),
-                "eta": eta,
-                "dt": self.iter_timer.seconds(),
-                "dt_data": self.data_timer.seconds(),
-                "dt_net": self.net_timer.seconds(),
-                "mode": self.mode,
-            }
-        else:
-            raise NotImplementedError("Unknown mode: {}".format(self.mode))
-
-        logging.log_json_stats(stats)
-
-    def iter_tic(self):
-        """
-        Start to record time.
-        """
-        self.iter_timer.reset()
-        self.data_timer.reset()
-
-    def iter_toc(self):
-        """
-        Stop to record time.
-        """
-        self.iter_timer.pause()
-        self.net_timer.pause()
-
-    def data_toc(self):
-        self.data_timer.pause()
-        self.net_timer.reset()
-
-    def reset(self):
-        """
-        Reset the Meter.
-        """
-        self.loss.reset()
-
-        self.all_preds = []
-        self.all_ori_boxes = []
-        self.all_metadata = []
-
-    def update_stats(self, preds, ori_boxes, metadata, loss=None, lr=None):
-        """
-        Update the current stats.
-        Args:
-            preds (tensor): prediction embedding.
-            ori_boxes (tensor): original boxes (x1, y1, x2, y2).
-            metadata (tensor): metadata of the AVA data.
-            loss (float): loss value.
-            lr (float): learning rate.
-        """
-        if self.mode in ["val", "test"]:
-            self.all_preds.append(preds)
-            self.all_ori_boxes.append(ori_boxes)
-            self.all_metadata.append(metadata)
-        if loss is not None:
-            self.loss.add_value(loss)
-        if lr is not None:
-            self.lr = lr
-
-    def finalize_metrics(self, log=True):
-        """
-        Calculate and log the final AVA metrics.
-        """
-        all_preds = torch.cat(self.all_preds, dim=0)
-        all_ori_boxes = torch.cat(self.all_ori_boxes, dim=0)
-        all_metadata = torch.cat(self.all_metadata, dim=0)
-
-        if self.mode == "test" or (self.full_ava_test and self.mode == "val"):
-            groundtruth = self.full_groundtruth
-        else:
-            groundtruth = self.mini_groundtruth
-
-        self.full_map = evaluate_ava(
-            all_preds,
-            all_ori_boxes,
-            all_metadata.tolist(),
-            self.excluded_keys,
-            self.class_whitelist,
-            self.categories,
-            groundtruth=groundtruth,
-            video_idx_to_name=self.video_idx_to_name,
-        )
-        if log:
-            stats = {"mode": self.mode, "map": self.full_map}
-            logging.log_json_stats(stats)
-
-    def log_epoch_stats(self, cur_epoch):
-        """
-        Log the stats of the current epoch.
-        Args:
-            cur_epoch (int): the number of current epoch.
-        """
-        if self.mode in ["val", "test"]:
-            self.finalize_metrics(log=False)
-            stats = {
-                "_type": "{}_epoch".format(self.mode),
-                "cur_epoch": "{}".format(cur_epoch + 1),
-                "mode": self.mode,
-                "map": self.full_map,
-                "gpu_mem": "{:.2f}G".format(misc.gpu_mem_usage()),
-                "RAM": "{:.2f}/{:.2f}G".format(*misc.cpu_mem_usage()),
-            }
-            logging.log_json_stats(stats)
-
 
 class TestMeter(object):
     """
@@ -314,6 +103,7 @@ class TestMeter(object):
                     self.video_labels[vid_id].type(torch.FloatTensor),
                     labels[ind].type(torch.FloatTensor),
                 )
+            
             self.video_labels[vid_id] = labels[ind]
             if self.ensemble_method == "sum":
                 self.video_preds[vid_id] += preds[ind]
@@ -515,7 +305,7 @@ class TrainMeter(object):
         self.data_timer.pause()
         self.net_timer.reset()
 
-    def update_stats(self, top1_err, top5_err, loss, lr, mb_size):
+    def update_stats(self, loss, lr, mb_size):
         """
         Update the current stats.
         Args:
@@ -529,14 +319,6 @@ class TrainMeter(object):
         self.lr = lr
         self.loss_total += loss * mb_size
         self.num_samples += mb_size
-
-        if not self._cfg.DATA.MULTI_LABEL:
-            # Current minibatch stats
-            self.mb_top1_err.add_value(top1_err)
-            self.mb_top5_err.add_value(top5_err)
-            # Aggregate stats
-            self.num_top1_mis += top1_err * mb_size
-            self.num_top5_mis += top5_err * mb_size
 
     def log_iter_stats(self, cur_epoch, cur_iter):
         """
@@ -563,9 +345,6 @@ class TrainMeter(object):
             "lr": self.lr,
             "gpu_mem": "{:.2f}G".format(misc.gpu_mem_usage()),
         }
-        if not self._cfg.DATA.MULTI_LABEL:
-            stats["top1_err"] = self.mb_top1_err.get_win_median()
-            stats["top5_err"] = self.mb_top5_err.get_win_median()
         logging.log_json_stats(stats)
 
     def log_epoch_stats(self, cur_epoch):
@@ -590,11 +369,7 @@ class TrainMeter(object):
             "RAM": "{:.2f}/{:.2f}G".format(*misc.cpu_mem_usage()),
         }
         if not self._cfg.DATA.MULTI_LABEL:
-            top1_err = self.num_top1_mis / self.num_samples
-            top5_err = self.num_top5_mis / self.num_samples
             avg_loss = self.loss_total / self.num_samples
-            stats["top1_err"] = top1_err
-            stats["top5_err"] = top5_err
             stats["loss"] = avg_loss
         logging.log_json_stats(stats)
 
@@ -604,7 +379,7 @@ class ValMeter(object):
     Measures validation stats.
     """
 
-    def __init__(self, max_iter, cfg, ema=False):
+    def __init__(self, max_iter, cfg):
         """
         Args:
             max_iter (int): the max number of iteration of the current epoch.
@@ -628,12 +403,18 @@ class ValMeter(object):
         self.all_preds = []
         self.all_labels = []
         self.output_dir = cfg.OUTPUT_DIR
-        self.ema = ema
+        self.loss = ScalarMeter(cfg.LOG_PERIOD)
+        self.loss.reset()
+        self.loss_total = 0.0
+
+
 
     def reset(self):
         """
         Reset the Meter.
         """
+        self.loss.reset()
+        self.loss_total = 0.0
         self.iter_timer.reset()
         self.mb_top1_err.reset()
         self.mb_top5_err.reset()
@@ -661,7 +442,7 @@ class ValMeter(object):
         self.data_timer.pause()
         self.net_timer.reset()
 
-    def update_stats(self, top1_err, top5_err, mb_size):
+    def update_stats(self, loss, mb_size):
         """
         Update the current stats.
         Args:
@@ -669,10 +450,10 @@ class ValMeter(object):
             top5_err (float): top5 error rate.
             mb_size (int): mini batch size.
         """
-        self.mb_top1_err.add_value(top1_err)
-        self.mb_top5_err.add_value(top5_err)
-        self.num_top1_mis += top1_err * mb_size
-        self.num_top5_mis += top5_err * mb_size
+        # self.mb_top1_err.add_value(top1_err)
+        # self.mb_top5_err.add_value(top5_err)
+        self.loss.add_value(loss)
+        self.loss_total += loss * mb_size
         self.num_samples += mb_size
 
     def update_predictions(self, preds, labels):
@@ -703,11 +484,9 @@ class ValMeter(object):
             "iter": "{}/{}".format(cur_iter + 1, self.max_iter),
             "time_diff": self.iter_timer.seconds(),
             "eta": eta,
+            "loss": self.loss.get_win_median(),
             "gpu_mem": "{:.2f}G".format(misc.gpu_mem_usage()),
         }
-        if not self._cfg.DATA.MULTI_LABEL:
-            stats["top1_err"] = self.mb_top1_err.get_win_median()
-            stats["top5_err"] = self.mb_top5_err.get_win_median()
         logging.log_json_stats(stats)
 
     def log_epoch_stats(self, cur_epoch):
@@ -716,39 +495,23 @@ class ValMeter(object):
         Args:
             cur_epoch (int): the number of current epoch.
         """
-        if self.ema:
-            _type = "ema_val_epoch"
-        else:
-            _type = "val_epoch"
         stats = {
-            "_type": _type,
+            "_type": "val_epoch",
             "epoch": "{}/{}".format(cur_epoch + 1, self._cfg.SOLVER.MAX_EPOCH),
             "time_diff": self.iter_timer.seconds(),
             "gpu_mem": "{:.2f}G".format(misc.gpu_mem_usage()),
             "RAM": "{:.2f}/{:.2f}G".format(*misc.cpu_mem_usage()),
         }
-        flag = False
         if self._cfg.DATA.MULTI_LABEL:
             stats["map"] = get_map(
                 torch.cat(self.all_preds).cpu().numpy(),
                 torch.cat(self.all_labels).cpu().numpy(),
             )
         else:
-            top1_err = self.num_top1_mis / self.num_samples
-            top5_err = self.num_top5_mis / self.num_samples
-            self.min_top1_err = min(self.min_top1_err, top1_err)
-            self.min_top5_err = min(self.min_top5_err, top5_err)
-
-            stats["top1_err"] = top1_err
-            stats["top5_err"] = top5_err
-            stats["min_top1_err"] = self.min_top1_err
-            stats["min_top5_err"] = self.min_top5_err
-
-            if top1_err == self.min_top1_err:
-                flag = True
+            avg_loss = self.loss_total / self.num_samples
+            stats["loss"] = avg_loss
 
         logging.log_json_stats(stats)
-        return flag
 
 
 def get_map(preds, labels):
