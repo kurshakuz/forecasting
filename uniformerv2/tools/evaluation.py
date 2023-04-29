@@ -14,7 +14,6 @@ import slowfast.utils.checkpoint as cu
 import slowfast.utils.logging as logging
 from slowfast.datasets import loader
 from slowfast.models import build_model
-from utils.util import scaling
 
 
 logger = logging.get_logger(__name__)
@@ -100,7 +99,7 @@ def evaluation_test(cfg, model, loader, num_vis, outputdir, plot=False):
         preds = model(inputs)
 
         # adjust the scale
-        preds = scaling(cfg, preds, meta[2:4])
+        # preds = scaling(cfg, preds, meta[2:4])
 
         # Cuda -> CPU
         preds = preds.to("cpu").detach().numpy()
