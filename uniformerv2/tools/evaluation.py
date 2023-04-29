@@ -229,6 +229,9 @@ def evaluation(cfg):
     if du.is_master_proc() and cfg.LOG_MODEL_INFO:
         misc.log_model_info(model, cfg, use_train_input=True)
 
+    # Construct the optimizer.
+    optimizer = optim.construct_optimizer(model, cfg)
+
     # Create the video loader.
     assert eval_type in ["val", "test"]
     video_loader = loader.construct_loader(cfg, eval_type)
@@ -241,7 +244,7 @@ def evaluation(cfg):
     else:
         logger.info("Find no checkpoint file")
     logger.info("Load from {}".format(checkpoint))
-    cu.load_checkpoint(checkpoint, model, cfg.NUM_GPUS > 1)
+    cu.load_checkpoint(checkpoint, model, cfg.NUM_GPUS > 1, optimizer)
 
     # Evaluation
     if eval_type == "val":
