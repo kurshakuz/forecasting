@@ -6,6 +6,7 @@ from pathlib import Path
 import torch
 import numpy as np
 import cv2
+from timm.utils import NativeScaler
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
@@ -14,6 +15,8 @@ import slowfast.utils.checkpoint as cu
 import slowfast.utils.logging as logging
 from slowfast.datasets import loader
 from slowfast.models import build_model
+import slowfast.utils.distributed as du
+import slowfast.utils.misc as misc
 
 
 logger = logging.get_logger(__name__)
@@ -205,6 +208,8 @@ def visualize_test(preds, meta, outputdir):
 
 
 def main(cfg, num_vis, eval_type, plot):
+    # Set up environment.
+    du.init_distributed_training(cfg)
     # Set random seed from configs.
     np.random.seed(cfg.RNG_SEED)
     torch.manual_seed(cfg.RNG_SEED)
@@ -212,8 +217,13 @@ def main(cfg, num_vis, eval_type, plot):
     # Setup logging format.
     logging.setup_logging(cfg.OUTPUT_DIR)
 
+    # Loss scaler
+    loss_scaler = NativeScaler()
+
     # Build the video model and print model statistics.
     model = build_model(cfg)
+    if du.is_master_proc() and cfg.LOG_MODEL_INFO:
+        misc.log_model_info(model, cfg, use_train_input=True)
 
     # Create the video loader.
     assert eval_type in ["val", "test"]
