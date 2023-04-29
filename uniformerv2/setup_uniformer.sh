@@ -28,8 +28,10 @@ python3 setup.py build develop
 
 
 pip install ftfy
-python3 /workspace/thesis-ws/uniformerv2/extract_clip/extract_clip.py
+# python3 /workspace/thesis-ws/uniformerv2/extract_clip/extract_clip.py
 # mv /workspace/thesis-ws/uniformerv2/vit_l14.pth /workspace/vit_l14.pth
+
+python3 /workspace/thesis-ws/uniformerv2/extract_clip/extract_clip_b_16.py
 mv /workspace/thesis-ws/uniformerv2/vit_b16.pth /workspace/vit_b16.pth
 
 python3 /workspace/thesis-ws/uniformerv2/tools/run_net.py --cfg /workspace/thesis-ws/uniformerv2/exp/ego4d_hands/config.yaml
