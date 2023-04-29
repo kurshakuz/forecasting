@@ -243,7 +243,7 @@ def evaluation(cfg):
     else:
         logger.info("Find no checkpoint file")
     logger.info("Load from {}".format(checkpoint))
-    cu.load_checkpoint(checkpoint, model, data_parallel=(cfg.NUM_GPUS > 1), optimize=optimizer)
+    cu.load_checkpoint(checkpoint, model, data_parallel=(cfg.NUM_GPUS > 1), optimizer=optimizer)
 
     # Evaluation
     if eval_type == "val":
