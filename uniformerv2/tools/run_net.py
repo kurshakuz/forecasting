@@ -9,6 +9,7 @@ from slowfast.utils.parser import load_config, parse_args
 # from demo_net import demo
 from test_net import test
 from train_net import train
+from evaluation import evaluation
 # from visualization import visualize
 
 
@@ -19,6 +20,9 @@ def main():
     args = parse_args()
     cfg = load_config(args)
     cfg = assert_and_infer_cfg(cfg)
+
+    if cfg.TRAIN.EVAL_ONLY:
+        launch_job(cfg=cfg, init_method=args.init_method, func=evaluation)
 
     # Perform training.
     if cfg.TRAIN.ENABLE:

@@ -11,7 +11,8 @@ from timm.utils import NativeScaler
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from slowfast.utils.parser import load_config
-import slowfast.utils.checkpoint as cu
+import slowfast.models.optimizer as optim
+import slowfast.utils.checkpoint_amp as cu
 import slowfast.utils.logging as logging
 from slowfast.datasets import loader
 from slowfast.models import build_model
@@ -207,7 +208,10 @@ def visualize_test(preds, meta, outputdir):
         cv2.imwrite(str(output_path) + ".png", img)
 
 
-def main(cfg, num_vis, eval_type, plot):
+def evaluation(cfg):
+    num_vis=10
+    eval_type='val'
+    plot=False
     # Set up environment.
     du.init_distributed_training(cfg)
     # Set random seed from configs.
@@ -246,13 +250,13 @@ def main(cfg, num_vis, eval_type, plot):
         evaluation_test(cfg, model, video_loader, num_vis, cfg.OUTPUT_DIR, plot=plot)
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--cfg_file", default="path_to_config")
-    parser.add_argument("--opts", default=None)
-    parser.add_argument("--num_vis", default=10)
-    parser.add_argument("--plot", default=False)
-    parser.add_argument("--eval_type", default="val")  # val or test
-    args = parser.parse_args()
-    cfg = load_config(args)
-    main(cfg, args.num_vis, args.eval_type, args.plot)
+# if __name__ == "__main__":
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument("--cfg_file", default="path_to_config")
+#     parser.add_argument("--opts", default=None)
+#     parser.add_argument("--num_vis", default=10)
+#     parser.add_argument("--plot", default=False)
+#     parser.add_argument("--eval_type", default="val")  # val or test
+#     args = parser.parse_args()
+#     cfg = load_config(args)
+#     main(cfg, args.num_vis, args.eval_type, args.plot)

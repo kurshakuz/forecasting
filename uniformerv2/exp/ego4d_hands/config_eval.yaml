@@ -7,6 +7,7 @@ TRAIN:
   AUTO_RESUME: True
   CHECKPOINT_FILE_PATH: /workspace/checkpoints/checkpoint_epoch_00020.pyth
   CHECKPOINT_TYPE: pytorch
+  EVAL_ONLY: True
 DATA:
   NUM_FRAMES: 8
   SAMPLING_RATE: 8

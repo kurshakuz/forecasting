@@ -45,6 +45,9 @@ _C.TRAIN = CfgNode()
 # If True Train the model, else skip training.
 _C.TRAIN.ENABLE = True
 
+# Thesis. If True, only evaluate the model.
+_C.TRAIN.EVAL_ONLY = False
+
 # Dataset.
 _C.TRAIN.DATASET = "kinetics"
 
