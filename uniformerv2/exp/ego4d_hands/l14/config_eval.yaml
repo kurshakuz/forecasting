@@ -1,7 +1,7 @@
 TRAIN:
-  ENABLE: True
+  ENABLE: False
   DATASET: ego4dhand
-  BATCH_SIZE: 8
+  BATCH_SIZE: 16
   EVAL_PERIOD: 5
   CHECKPOINT_PERIOD: 5
   AUTO_RESUME: True
@@ -19,16 +19,16 @@ DATA:
   PATH_TO_DATA_DIR: /workspace/ego4d_data_annot
   PATH_LABEL_SEPARATOR: ' '
 UNIFORMERV2:
-  BACKBONE: 'uniformerv2_b16'
-  N_LAYERS: 8
-  N_DIM: 768
-  N_HEAD: 12
+  BACKBONE: 'uniformerv2_l14'
+  N_LAYERS: 16
+  N_DIM: 1024
+  N_HEAD: 16
   MLP_FACTOR: 4.0
   BACKBONE_DROP_PATH_RATE: 0.2
   DROP_PATH_RATE: 0.4
-  MLP_DROPOUT: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+  MLP_DROPOUT: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
   CLS_DROPOUT: 0.5
-  RETURN_LIST: [4, 5, 6, 7, 8, 9, 10, 11]
+  RETURN_LIST: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
   DW_REDUCTION: 1.5
   NO_LMHRA: False
   DOUBLE_LMHRA: True
