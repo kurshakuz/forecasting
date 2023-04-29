@@ -10,7 +10,6 @@ from timm.utils import NativeScaler
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
-from slowfast.utils.parser import load_config
 import slowfast.models.optimizer as optim
 import slowfast.utils.checkpoint_amp as cu
 import slowfast.utils.logging as logging
@@ -244,7 +243,7 @@ def evaluation(cfg):
     else:
         logger.info("Find no checkpoint file")
     logger.info("Load from {}".format(checkpoint))
-    cu.load_checkpoint(checkpoint, model, cfg.NUM_GPUS > 1, optimizer)
+    cu.load_checkpoint(checkpoint, model, data_parallel=(cfg.NUM_GPUS > 1), optimize=optimizer)
 
     # Evaluation
     if eval_type == "val":
