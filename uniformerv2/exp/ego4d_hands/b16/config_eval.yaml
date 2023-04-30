@@ -1,11 +1,11 @@
 TRAIN:
   ENABLE: False
   DATASET: ego4dhand
-  BATCH_SIZE: 8
+  BATCH_SIZE: 32
   EVAL_PERIOD: 5
   CHECKPOINT_PERIOD: 5
   AUTO_RESUME: True
-  CHECKPOINT_FILE_PATH: /workspace/checkpoints/checkpoint_epoch_00020.pyth
+  CHECKPOINT_FILE_PATH: /workspace/checkpoints/checkpoint_epoch_00030.pyth
   CHECKPOINT_TYPE: pytorch
   EVAL_ONLY: True
 DATA:
@@ -84,4 +84,3 @@ NUM_GPUS: 2
 NUM_SHARDS: 1
 RNG_SEED: 0
 OUTPUT_DIR: .
-
