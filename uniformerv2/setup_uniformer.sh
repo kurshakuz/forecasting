@@ -34,4 +34,7 @@ pip install ftfy
 python3 /workspace/thesis-ws/uniformerv2/extract_clip/extract_clip_b_16.py
 mv /workspace/thesis-ws/uniformerv2/vit_b16.pth /workspace/vit_b16.pth
 
+wget https://github.com/OpenGVLab/ego4d-eccv2022-solutions/releases/download/1.0.0/ego4d_verb_pretrain_vitl_k700.pt
+mv /workspace/thesis-ws/uniformerv2/ego4d_verb_pretrain_vitl_k700.pt /workspace/ego4d_verb_pretrain_vitl_k700.pt
+
 python3 /workspace/thesis-ws/uniformerv2/tools/run_net.py --cfg /workspace/thesis-ws/uniformerv2/exp/ego4d_hands/config.yaml

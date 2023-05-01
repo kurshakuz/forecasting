@@ -21,6 +21,7 @@ _MODELS = {
     "ViT-B/16": os.path.join(MODEL_PATH, "vit_b16.pth"),
     "ViT-L/14": os.path.join(MODEL_PATH, "vit_l14.pth"),
     "ViT-L/14_336": os.path.join(MODEL_PATH, "vit_l14_336.pth"),
+    "ViT-L/16_verb": os.path.join(MODEL_PATH, "ego4d_verb_pretrain_vitl_k700.pt"),
 }
 
 
@@ -355,6 +356,51 @@ def load_state_dict(model, state_dict):
             time_dim = state_dict_3d[k].shape[2]
             state_dict[k] = inflate_weight(state_dict[k], time_dim)
     model.load_state_dict(state_dict, strict=False)
+
+
+def uniformerv2_l16_verb(
+    pretrained=True, use_checkpoint=False, checkpoint_num=[0],
+    t_size=16, dw_reduction=1.5, backbone_drop_path_rate=0., 
+    temporal_downsample=True,
+    no_lmhra=False, double_lmhra=True,
+    return_list=[20, 21, 22, 23],
+    n_layers=4, n_dim=1024, n_head=16, mlp_factor=4.0, drop_path_rate=0.,
+    mlp_dropout=[0.5, 0.5, 0.5, 0.5], 
+    cls_dropout=0.5, num_classes=400,
+    frozen=False,
+):
+    model = VisionTransformer(
+        input_resolution=224,
+        patch_size=16,
+        width=1024,
+        layers=24,
+        heads=16,
+        output_dim=768,
+        use_checkpoint=use_checkpoint,
+        checkpoint_num=checkpoint_num,
+        t_size=t_size,
+        dw_reduction=dw_reduction, 
+        backbone_drop_path_rate=backbone_drop_path_rate, 
+        temporal_downsample=temporal_downsample,
+        no_lmhra=no_lmhra,
+        double_lmhra=double_lmhra,
+        return_list=return_list, 
+        n_layers=n_layers, 
+        n_dim=n_dim, 
+        n_head=n_head, 
+        mlp_factor=mlp_factor, 
+        drop_path_rate=drop_path_rate, 
+        mlp_dropout=mlp_dropout, 
+        cls_dropout=cls_dropout, 
+        num_classes=num_classes,
+        frozen=frozen,
+    )
+
+    if pretrained:
+        logger.info('load pretrained weights')
+        state_dict = torch.load(_MODELS["ViT-L/16_verb"], map_location='cpu')
+        load_state_dict(model, state_dict)
+    return model.eval()
 
 
 def uniformerv2_b16(
