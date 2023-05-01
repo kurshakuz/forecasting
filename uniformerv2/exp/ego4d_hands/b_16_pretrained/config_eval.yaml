@@ -1,5 +1,5 @@
 TRAIN:
-  ENABLE: True
+  ENABLE: False
   DATASET: ego4dhand
   BATCH_SIZE: 32
   EVAL_PERIOD: 1
@@ -33,8 +33,6 @@ UNIFORMERV2:
   RETURN_LIST: [8, 9, 10, 11]
   NO_LMHRA: True
   TEMPORAL_DOWNSAMPLE: False
-  PRETRAIN: 'k710/k710_uniformerv2_b16_8x224.pyth'
-  DELETE_SPECIAL_HEAD: True
 AUG:
   NUM_SAMPLE: 1
   ENABLE: True
