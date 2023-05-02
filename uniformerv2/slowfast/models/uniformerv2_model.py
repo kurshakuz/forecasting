@@ -348,13 +348,14 @@ def inflate_weight(weight_2d, time_dim, center=True):
 def load_state_dict(model, state_dict):
     state_dict_3d = model.state_dict()
     for k in state_dict.keys():
-        if state_dict[k].shape != state_dict_3d[k].shape:
-            if len(state_dict_3d[k].shape) <= 2:
-                logger.info(f'Ignore: {k}')
-                continue
-            logger.info(f'Inflate: {k}, {state_dict[k].shape} => {state_dict_3d[k].shape}')
-            time_dim = state_dict_3d[k].shape[2]
-            state_dict[k] = inflate_weight(state_dict[k], time_dim)
+        if k in state_dict_3d.keys():
+            if state_dict[k].shape != state_dict_3d[k].shape:
+                if len(state_dict_3d[k].shape) <= 2:
+                    logger.info(f'Ignore: {k}')
+                    continue
+                logger.info(f'Inflate: {k}, {state_dict[k].shape} => {state_dict_3d[k].shape}')
+                time_dim = state_dict_3d[k].shape[2]
+                state_dict[k] = inflate_weight(state_dict[k], time_dim)
     model.load_state_dict(state_dict, strict=False)
 
 
@@ -399,6 +400,8 @@ def uniformerv2_l16_verb(
     if pretrained:
         logger.info('load pretrained weights')
         state_dict = torch.load(_MODELS["ViT-L/16_verb"], map_location='cpu')
+        logger.info(state_dict.keys())
+        state_dict = state_dict['module']
         load_state_dict(model, state_dict)
     return model.eval()
 
