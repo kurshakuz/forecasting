@@ -3,7 +3,7 @@ export OMP_NUM_THREADS=1
 
 OUTPUT_DIR='./workdir/ego4d_hands_uniformer_base' # work dir
 DATA_PATH='not use' # it is not to use
-MODEL_PATH='./ego4d_fhp_uniformer8x320.pth' #the pre-loaded weights for fine-tuning or validation
+MODEL_PATH='/workspace/thesis-ego4d/eccv-models/ego4d_fhp_uniformer8x320.pth' #the pre-loaded weights for fine-tuning or validation
 
 
 # batch_size can be adjusted according to the graphics card

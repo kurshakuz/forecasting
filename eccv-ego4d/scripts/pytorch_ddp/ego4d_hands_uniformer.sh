@@ -36,4 +36,4 @@ OMP_NUM_THREADS=1 python3 -m torch.distributed.launch --nproc_per_node=8 \
     --test_num_crop 3 \
 #    --enable_deepspeed \
 #    --disable_eval_during_finetuning \
-    #    --finetune ${MODEL_PATH} \
+#    --finetune ${MODEL_PATH} \
