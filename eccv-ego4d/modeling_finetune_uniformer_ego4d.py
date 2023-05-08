@@ -493,6 +493,19 @@ class Uniformer(nn.Module):
 
 
 @register_model
+def uniformer_base_320_ego4d_finetune(pretrained=False, **kwargs):
+    # model_folder = "/home/dev/workspace/thesis-ego4d/eccv-models/"
+    model_folder = "/workspace/thesis-ego4d/eccv-models/"
+    ckpt_file_path = model_folder + "ego4d_fhp_uniformer8x320.pth"  # set uniformer pretrain weights
+    print(kwargs)
+    model = Uniformer(img_size=320, **kwargs)
+    ckpt = model.get_pretrained_checkpoint_file(ckpt_file_path)
+    a, b = model.load_state_dict(ckpt, strict=False)
+    print(a, b)
+    return model
+
+
+@register_model
 def uniformer_base_256_ego4d_finetune(pretrained=False, **kwargs):
     # model_folder = "/home/dev/workspace/thesis-ego4d/eccv-models/"
     model_folder = "/workspace/thesis-ego4d/eccv-models/"
