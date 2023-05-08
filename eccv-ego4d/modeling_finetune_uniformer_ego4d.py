@@ -269,7 +269,7 @@ class Uniformer(nn.Module):
         https://arxiv.org/abs/2010.11929
     """
 
-    def __init__(self, pretrained_cfg=None, img_size=224, depth=[5, 8, 20, 7], num_classes=600, in_chans=3, embed_dim=[64, 128, 320, 512],
+    def __init__(self, pretrained_cfg_overlay=None, pretrained_cfg=None, img_size=224, depth=[5, 8, 20, 7], num_classes=600, in_chans=3, embed_dim=[64, 128, 320, 512],
                  head_dim=64, mlp_ratio=4, qkv_bias=True, qk_scale=None, representation_size=None, drop_rate=0,
                  head_dropout=0,
                  attn_drop_rate=0, drop_path_rate=0.1, split=False, std=False):
@@ -497,6 +497,7 @@ def uniformer_base_256_ego4d_finetune(pretrained=False, **kwargs):
     # model_folder = "/home/dev/workspace/thesis-ego4d/eccv-models/"
     model_folder = "/workspace/thesis-ego4d/eccv-models/"
     ckpt_file_path = model_folder + "ego4d_fhp_uniformer8x320.pth"  # set uniformer pretrain weights
+    print(kwargs)
     model = Uniformer(img_size=256, **kwargs)
     ckpt = model.get_pretrained_checkpoint_file(ckpt_file_path)
     a, b = model.load_state_dict(ckpt, strict=False)
