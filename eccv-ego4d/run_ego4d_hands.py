@@ -213,6 +213,7 @@ def get_args():
 
 
 def main(args, ds_init):
+    torch.autograd.set_detect_anomaly(True)
     utils.init_distributed_mode(args)
 
     if ds_init is not None:
