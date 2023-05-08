@@ -20,6 +20,10 @@ def isinf(x):
     return torch.isinf(x).int().sum() != 0
 
 
+def isfinite(x):
+    return torch.isfinite(x).all() == True
+
+
 def train_class_batch(model, samples, target, masks):
     outputs = model(samples)
     outputs = outputs * masks
@@ -81,6 +85,9 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
         assert not isinf(samples)
         assert not isinf(targets_mask)
         assert not isinf(targets)
+        assert isfinite(samples)
+        assert isfinite(targets_mask)
+        assert isfinite(targets)
         print("Input asserted")
 
         if mixup_fn is not None:
