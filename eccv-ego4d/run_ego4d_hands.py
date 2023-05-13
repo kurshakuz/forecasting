@@ -236,8 +236,8 @@ def main(args, ds_init):
         dataset_val = None
     else:
         dataset_val, _, _ = build_dataset(is_train=False, test_mode=False, args=args)
-    dataset_test = None
-    # dataset_test, _, _ = build_dataset(is_train=False, test_mode=True, args=args)
+    # dataset_test = None
+    dataset_test, _, _ = build_dataset(is_train=False, test_mode=True, args=args)
 
     num_tasks = utils.get_world_size()
     global_rank = utils.get_rank()

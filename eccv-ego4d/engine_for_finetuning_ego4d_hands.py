@@ -414,7 +414,11 @@ def final_test(data_loader, model, device, args):
                 loss = loss_fun(outputs, target)
                 loss = loss / avg
         for i in range(outputs.size(0)):
-            final_result[clip_names[i]] = outputs[i].cpu().numpy()
+            if "test" in mode:
+                num_clips = 30
+                final_result[clip_names[i]] = outputs[i].cpu().numpy()/num_clips
+            else:
+                final_result[clip_names[i]] = outputs[i].cpu().numpy()
 
         # acc1, acc5 = accuracy(output, target, topk=(1, 5))
 
