@@ -51,6 +51,17 @@ def bn_3d(dim):
     # return nn.SyncBatchNorm(dim)
     return nn.BatchNorm3d(dim)
 
+def isnan(x):
+    return torch.isnan(x).int().sum() != 0
+
+
+def isinf(x):
+    return torch.isinf(x).int().sum() != 0
+
+
+def isfinite(x):
+    return torch.isfinite(x).all() == True
+
 
 class Mlp(nn.Module):
     def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=nn.GELU, drop=0.):
@@ -476,6 +487,7 @@ class Uniformer(nn.Module):
             if self.use_checkpoint and i < self.checkpoint_num[3]:
                 x = checkpoint.checkpoint(blk, x)
             else:
+                
                 x = blk(x)
         x = self.norm(x)
         x = self.pre_logits(x)
@@ -483,8 +495,13 @@ class Uniformer(nn.Module):
 
     def forward(self, x):
         # x = x[0]
-
+        assert not isnan(x)
+        assert not isinf(x)
+        assert isfinite(x)
         x = self.forward_features(x)
+        assert not isnan(x)
+        assert not isinf(x)
+        assert isfinite(x)
         # print(x.shape)
         x = x.flatten(2).mean(-1)
         x = self.dropout(x)
