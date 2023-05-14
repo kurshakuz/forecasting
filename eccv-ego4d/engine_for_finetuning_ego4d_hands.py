@@ -358,6 +358,9 @@ def validation_one_epoch(data_loader, model, device):
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
 
+    if loss is not None:
+        print('* loss {losses.global_avg:.3f}'.format(losses=metric_logger.loss))
+
     return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
 
 
