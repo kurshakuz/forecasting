@@ -423,7 +423,9 @@ def main(args, ds_init):
             raise NotImplementedError
 
         test_stats = final_test(dl, model, device, args)
-        validation_visualization(model, data_loader_val, 10, '/workspace/vis', plot=True)
+        # uncomment to enable visualization
+        # validation_visualization(model, data_loader_val, 10, '/workspace/vis', plot=True)
+
         # torch.distributed.barrier()
         # if global_rank == 0:
         #     print("Start merging results...")

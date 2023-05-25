@@ -356,7 +356,7 @@ def plot_val(preds, labels, masks, meta, outputdir):
 def validation_visualization(model, loader, num_vis, outputdir, plot=False):
     # Evaluation mode enabled. The running stats would not be updated.
     model.eval()
-    for cur_iter, (inputs, labels, masks, _, meta) in enumerate(loader):
+    for cur_iter, (inputs, labels, masks, meta) in enumerate(loader):
         if isinstance(inputs, (list,)):
             for i in range(len(inputs)):
                 inputs[i] = inputs[i].cuda(non_blocking=True)
