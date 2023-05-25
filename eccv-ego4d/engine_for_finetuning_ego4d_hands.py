@@ -11,6 +11,10 @@ import torch.nn as nn
 
 import json
 
+# imports for visualization
+from pathlib import Path
+import cv2
+
 
 def isnan(x):
     return torch.isnan(x).int().sum() != 0
@@ -313,6 +317,72 @@ def eval_hands(pred_dict, anno_file, num_clips=30):
           .format(sum(left_final_list) / len(left_final_list), sum(right_final_list) / len(right_final_list)))
 
 
+def plot_val(preds, labels, masks, meta, outputdir):
+    # Use only the first item of the batch
+    pred = preds[0]
+    label = labels[0]
+    mask = masks[0]
+    input_dir = Path(meta[0][0])
+    pre45_frame = int(meta[1][0])
+    outputdir = Path(outputdir)
+
+    print(f"pred: {pred}")
+    print(f"label: {label}")
+
+    for key_frame in range(5):
+        frame = pre45_frame + 15 * key_frame
+        input_path = input_dir / Path(str(frame).zfill(6))
+        img = cv2.imread(str(input_path) + ".png")
+        for single_hand in range(2):
+            if mask[key_frame * 4 + single_hand * 2]:
+                cd_pred = (
+                    int(pred[key_frame * 4 + single_hand * 2]),
+                    int(pred[key_frame * 4 + single_hand * 2 + 1]),
+                )
+                cd_label = (
+                    int(label[key_frame * 4 + single_hand * 2]),
+                    int(label[key_frame * 4 + single_hand * 2 + 1]),
+                )
+                cv2.circle(img, cd_pred, 5, (255, 0, 0), thickness=-1)
+                cv2.circle(img, cd_label, 5, (0, 255, 0), thickness=-1)
+        video_name = input_dir.name
+        output_sudir = outputdir / Path("visualization/val") / video_name
+        output_sudir.mkdir(parents=True, exist_ok=True)
+        output_path = output_sudir / Path(str(frame).zfill(6))
+        cv2.imwrite(str(output_path) + ".png", img)
+
+
+@torch.no_grad()
+def validation_visualization(model, loader, num_vis, outputdir, plot=False):
+    # Evaluation mode enabled. The running stats would not be updated.
+    model.eval()
+    for cur_iter, (inputs, labels, masks, _, meta) in enumerate(loader):
+        if isinstance(inputs, (list,)):
+            for i in range(len(inputs)):
+                inputs[i] = inputs[i].cuda(non_blocking=True)
+        else:
+            inputs = inputs.cuda(non_blocking=True)
+
+        labels = labels.cuda()
+        masks = masks.cuda()
+        # if cfg.MODEL.PRE_TRAINED:
+        #     inputs = inputs[0]
+
+        preds = model(inputs)
+        preds = torch.mul(preds, masks).cuda()
+
+        # adjust the scale 
+        # TODO: Fix that issue
+        # preds = scaling(cfg, preds, meta[2:4])
+
+        # Cuda -> CPU
+        preds = preds.to("cpu").detach().numpy()
+        labels = labels.to("cpu").detach().numpy()
+
+        if plot and cur_iter < num_vis:
+            plot_val(preds, labels, masks, meta, outputdir)
+
+
 @torch.no_grad()
 def validation_one_epoch(data_loader, model, device):
     criterion = nn.SmoothL1Loss(reduction="mean", beta=5.0)
@@ -418,6 +488,7 @@ def final_test(data_loader, model, device, args):
                 loss = loss / avg
         for i in range(outputs.size(0)):
             if "test" in mode:
+                # This pre-processing is required for the EVAL-AI submission.
                 num_clips = 30
                 final_result[clip_names[i]] = outputs[i].cpu().numpy()*num_clips
             else:

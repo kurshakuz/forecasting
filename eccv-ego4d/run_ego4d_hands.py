@@ -17,7 +17,7 @@ from timm.utils import ModelEma
 from optim_factory import create_optimizer, get_parameter_groups, LayerDecayValueAssigner
 
 from datasets import build_dataset
-from engine_for_finetuning_ego4d_hands import train_one_epoch, validation_one_epoch, final_test
+from engine_for_finetuning_ego4d_hands import train_one_epoch, validation_one_epoch, final_test, validation_visualization
 from utils import NativeScalerWithGradNormCount as NativeScaler
 from utils import multiple_samples_collate
 import utils
@@ -458,6 +458,7 @@ def main(args, ds_init):
                     loss_scaler=loss_scaler, epoch=epoch, model_ema=model_ema)
         if data_loader_val is not None:
             test_stats = validation_one_epoch(data_loader_val, model, device)
+            validation_visualization(model, data_loader_val, 10, '/workspace/vis', plot=True)
             # print(f"Accuracy of the network on the {len(dataset_val)} val videos: {test_stats['acc1']:.1f}%")
             # if max_accuracy < test_stats["acc1"]:
             #     max_accuracy = test_stats["acc1"]
