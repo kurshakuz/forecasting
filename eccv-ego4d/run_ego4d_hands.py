@@ -423,6 +423,7 @@ def main(args, ds_init):
             raise NotImplementedError
 
         test_stats = final_test(dl, model, device, args)
+        validation_visualization(model, data_loader_val, 10, '/workspace/vis', plot=True)
         # torch.distributed.barrier()
         # if global_rank == 0:
         #     print("Start merging results...")
@@ -458,7 +459,6 @@ def main(args, ds_init):
                     loss_scaler=loss_scaler, epoch=epoch, model_ema=model_ema)
         if data_loader_val is not None:
             test_stats = validation_one_epoch(data_loader_val, model, device)
-            validation_visualization(model, data_loader_val, 10, '/workspace/vis', plot=True)
             # print(f"Accuracy of the network on the {len(dataset_val)} val videos: {test_stats['acc1']:.1f}%")
             # if max_accuracy < test_stats["acc1"]:
             #     max_accuracy = test_stats["acc1"]
