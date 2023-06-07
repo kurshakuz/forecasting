@@ -40,6 +40,32 @@ def train_class_batch(model, samples, target, masks):
     return loss, outputs
 
 
+def train_class_batch_multitask(model, samples, target, masks):
+    outputs = model(samples)
+    reg_out = outputs[:, :20]
+    existence_logits = outputs[:, 20:]
+
+    # Coordinate Loss
+    reg_out = reg_out * masks
+    avg = masks.sum()
+
+    coordinate_loss_fun = nn.SmoothL1Loss(reduction="sum", beta=5.0)
+    coordinate_loss = coordinate_loss_fun(reg_out, target)
+    coordinate_loss = coordinate_loss / avg
+
+    # Existence Loss
+    existence_loss_fun = nn.BCEWithLogitsLoss(reduction="sum")
+    existence_loss = existence_loss_fun(existence_logits, masks)
+    existence_loss = existence_loss / avg
+
+    # Combined Loss
+    lambda1 = 1.0  # Weight for coordinate loss
+    lambda2 = 1.0  # Weight for existence loss
+    combined_loss = lambda1 * coordinate_loss + lambda2 * existence_loss
+
+    return combined_loss, outputs
+
+
 def get_loss_scale_for_deepspeed(model):
     optimizer = model.optimizer
     return optimizer.loss_scale if hasattr(optimizer, "loss_scale") else optimizer.cur_scale
@@ -50,7 +76,7 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
                     device: torch.device, epoch: int, loss_scaler, max_norm: float = 0,
                     model_ema: Optional[ModelEma] = None, mixup_fn: Optional[Mixup] = None, log_writer=None,
                     start_steps=None, lr_schedule_values=None, wd_schedule_values=None,
-                    num_training_steps_per_epoch=None, update_freq=None):
+                    num_training_steps_per_epoch=None, update_freq=None, multi_task=False):
     model.train(True)
     metric_logger = utils.MetricLogger(delimiter="  ")
     metric_logger.add_meter('lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
@@ -98,12 +124,20 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
 
         if loss_scaler is None:
             samples = samples.half()
-            loss, output = train_class_batch(
-                model, samples, targets, targets_mask)
-        else:
-            with torch.cuda.amp.autocast():
+            if multi_task:
+                loss, output = train_class_batch_multitask(
+                    model, samples, targets, targets_mask)
+            else:
                 loss, output = train_class_batch(
                     model, samples, targets, targets_mask)
+        else:
+            with torch.cuda.amp.autocast():
+                if multi_task:
+                    loss, output = train_class_batch_multitask(
+                        model, samples, targets, targets_mask)
+                else:
+                    loss, output = train_class_batch(
+                        model, samples, targets, targets_mask)
 
         loss_value = loss.item()
 
@@ -384,7 +418,7 @@ def validation_visualization(model, loader, num_vis, outputdir, plot=False):
 
 
 @torch.no_grad()
-def validation_one_epoch(data_loader, model, device):
+def validation_one_epoch(data_loader, model, device, multi_task=False):
     criterion = nn.SmoothL1Loss(reduction="mean", beta=5.0)
 
     metric_logger = utils.MetricLogger(delimiter="  ")
@@ -408,15 +442,38 @@ def validation_one_epoch(data_loader, model, device):
         # compute output
 
         with torch.cuda.amp.autocast():
-            outputs = model(videos)
-            outputs = outputs * target_mask
-            avg = target_mask.sum()
+            if  multi_task:
+                outputs = model(videos)
+                reg_out = outputs[:, :20]
+                existence_logits = outputs[:, 20:]
 
-            loss_fun = nn.SmoothL1Loss(reduction="sum", beta=5.0)
+                # Coordinate Loss
+                reg_out = reg_out * target_mask
+                avg = target_mask.sum()
 
-            # Compute the loss.
-            loss = loss_fun(outputs, target)
-            loss = loss / avg
+                coordinate_loss_fun = nn.SmoothL1Loss(reduction="sum", beta=5.0)
+                coordinate_loss = coordinate_loss_fun(reg_out, target)
+                coordinate_loss = coordinate_loss / avg
+
+                # Existence Loss
+                existence_loss_fun = nn.BCEWithLogitsLoss(reduction="sum")
+                existence_loss = existence_loss_fun(existence_logits, target_mask)
+                existence_loss = existence_loss / avg
+
+                # Combined Loss
+                lambda1 = 1.0  # Weight for coordinate loss
+                lambda2 = 1.0  # Weight for existence loss
+                loss = lambda1 * coordinate_loss + lambda2 * existence_loss
+            else:
+                outputs = model(videos)
+                outputs = outputs * target_mask
+                avg = target_mask.sum()
+
+                loss_fun = nn.SmoothL1Loss(reduction="sum", beta=5.0)
+
+                # Compute the loss.
+                loss = loss_fun(outputs, target)
+                loss = loss / avg
 
         for i in range(outputs.size(0)):
             final_result[clip_names[i]] = outputs[i].cpu().numpy()

@@ -138,6 +138,7 @@ def get_args():
     parser.add_argument('--use_mean_pooling', action='store_true')
     parser.set_defaults(use_mean_pooling=True)
     parser.add_argument('--use_cls', action='store_false', dest='use_mean_pooling')
+    parser.add_argument('--multi_task', action='store_true', default=False)
 
     # Dataset parameters
     parser.add_argument('--data_path', default='/path/to/list_kinetics-400', type=str,
@@ -453,6 +454,7 @@ def main(args, ds_init):
             log_writer=log_writer, start_steps=epoch * num_training_steps_per_epoch,
             lr_schedule_values=lr_schedule_values, wd_schedule_values=wd_schedule_values,
             num_training_steps_per_epoch=num_training_steps_per_epoch, update_freq=args.update_freq,
+            multi_task=args.multi_task,
         )
         if args.output_dir and args.save_ckpt:
             if (epoch + 1) % args.save_ckpt_freq == 0 or epoch + 1 == args.epochs:
@@ -460,7 +462,7 @@ def main(args, ds_init):
                     args=args, model=model, model_without_ddp=model_without_ddp, optimizer=optimizer,
                     loss_scaler=loss_scaler, epoch=epoch, model_ema=model_ema)
         if data_loader_val is not None:
-            test_stats = validation_one_epoch(data_loader_val, model, device)
+            test_stats = validation_one_epoch(data_loader_val, model, device, multi_task=args.multi_task)
             # print(f"Accuracy of the network on the {len(dataset_val)} val videos: {test_stats['acc1']:.1f}%")
             # if max_accuracy < test_stats["acc1"]:
             #     max_accuracy = test_stats["acc1"]
