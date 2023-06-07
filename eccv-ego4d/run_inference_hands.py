@@ -1,37 +1,57 @@
-from ego4d_hands_inference import Ego4dHandsDataset
-import torch
-from timm.models import create_model
-import video_transforms as video_transforms
-import volume_transforms as volume_transforms
 import os
 
+import numpy as np
+import torch
+from decord import VideoReader, cpu
+from timm.models import create_model
 
-def build_dataset(is_train, test_mode, args):
-    dataset = Ego4dHandsDataset(
-        anno_path='./',
-        data_path='/content/drive/MyDrive/data_path',
-        mode='mode',
-        clip_len=args.num_frames,
-        num_segment=args.num_segments,
-        test_num_segment=args.test_num_segment,
-        test_num_crop=args.test_num_crop,
-        num_crop=1 if not test_mode else 3,
-        keep_aspect_ratio=True,
-        crop_size=args.input_size,
-        short_side_size=args.short_side_size,
-        new_height=256,
-        new_width=320,
-        args=args)
-    verb_classes = 20
-    noun_classes = 0
+import modeling_finetune_uniformer_ego4d
+import video_transforms as video_transforms
+import volume_transforms as volume_transforms
 
-    print(noun_classes, args.nb_noun_classes)
-    print(verb_classes, args.nb_verb_classes)
-    assert verb_classes == args.nb_verb_classes
-    assert noun_classes == args.nb_noun_classes
-    # print("Number of the class = %d" % args.nb_classes)
-    # print("Now this datasets only support EGO4D!")
-    return dataset, verb_classes, noun_classes
+data_path = '/workspaces/thesis-ws'
+# model_path = '/workspaces/thesis-ws/ego4d_fhp_uniformer8x320.pth'
+model_path = '/workspaces/thesis-ws/checkpoint-13.pth'
+
+
+def loadvideo_decord(sample, new_width=340, new_height=256, num_segment=1, test_num_segment=10, keep_aspect_ratio=True):
+    """Load video content using Decord"""
+    fname = sample
+
+    if not (os.path.exists(fname)):
+        return []
+
+    # avoid hanging issue
+    if os.path.getsize(fname) < 1 * 1024:
+        print('SKIP: ', fname, " - ", os.path.getsize(fname))
+        return []
+    try:
+        if keep_aspect_ratio:
+            vr = VideoReader(fname, num_threads=1, ctx=cpu(0))
+        else:
+            vr = VideoReader(fname, width=new_width, height=new_height,
+                                num_threads=1, ctx=cpu(0))
+    except:
+        print("video cannot be loaded by decord: ", fname)
+        return []
+
+    num_frames = len(vr)
+
+    tick = num_frames / float(num_segment)
+    all_index = []
+    for t_seg in range(test_num_segment):
+        tmp_index = [
+            int(t_seg * tick / test_num_segment + tick * x)
+            for x in range(num_segment)
+        ]
+        all_index.extend(tmp_index)
+    all_index = list(np.array(all_index))
+    # all_index = list(np.sort(np.array(all_index)))
+    print("all_index: ", all_index)
+    vr.seek(0)
+    buffer = vr.get_batch(all_index).asnumpy()
+    return buffer
+
 
 class AttrDict(dict):
     def __init__(self, *args, **kwargs):
@@ -40,41 +60,20 @@ class AttrDict(dict):
 
 if __name__ == '__main__':
     args = AttrDict({
-        'model': 'uniformer_base_320_ego4d_finetune_trained',
+        'model': 'uniformer_base_320_ego4d_finetune',
         'nb_verb_classes': 20,
         'nb_noun_classes': 0,
-        'data_set': 'ego4d_hands',
-        'data_path': './dummy',
-        'log_dir': './workdir1/ego4d_hands_uniformer_base',
-        'output_dir': './workdir1/ego4d_hands_uniformer_base',
-        'batch_size': 1,
-        'num_sample': 1,
         'num_segments': 8,
-        'finetune': '/workspace/thesis-ego4d/ego4d_hands_uniformer_base/checkpoint-13.pth',
-        'warmup_epochs': 1,
+        'finetune': model_path,
         'input_size': 320,
         'short_side_size': 320,
-        'save_ckpt_freq': 1,
-        'num_frames': 16,
-        'layer_decay': 1.,
-        'opt': 'adamw',
-        'test_num_segment': 30,
-        'test_num_crop': 1,
-        'num_workers': 1,
-        'pin_mem': True,
+        'test_num_segment': 8,
         'device': 'cpu',
     })
 
-    dataset, _, _ = build_dataset(is_train=False, test_mode=False, args=args)
-    sampler = torch.utils.data.SequentialSampler(dataset)
-    data_loader = torch.utils.data.DataLoader(
-        dataset, sampler=sampler,
-        batch_size=int(1.5 * args.batch_size),
-        num_workers=args.num_workers,
-        pin_memory=args.pin_mem,
-        drop_last=False
-    )
-
+    # clip_name = "258_12542"
+    clip_name = "8_8890"
+    clip_path = os.path.join(data_path, 'cropped_videos_ant', clip_name + '.mp4')
 
     assert args.nb_verb_classes > 0 and args.nb_noun_classes == 0
     model = create_model(
@@ -83,16 +82,12 @@ if __name__ == '__main__':
         num_classes=args.nb_verb_classes,
     )
 
+    ckpt = model.get_pretrained_checkpoint_file(args.finetune)
+    a, b = model.load_state_dict(ckpt, strict=True)
+    print("Finetune model loading: ", a, b)
+
     device = torch.device(args.device)
     model.to(device)
-    pass
-    n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
-
-    clip_name = "258_12542"
-    data_path = '/content/drive/MyDrive/data_path'
-    x = os.path.join(data_path, 'cropped_videos_ant', clip_name + '.mp4')
-    print(x)
-    assert os.path.exists(x)
 
     data_transform = video_transforms.Compose([
         video_transforms.Resize(args.short_side_size, interpolation='bilinear'),
@@ -102,26 +97,23 @@ if __name__ == '__main__':
                                     std=[0.229, 0.224, 0.225])
     ])
 
-    buffer = dataset.loadvideo_decord(x)
-    print(buffer.shape)
-    buffer = dataset.data_transform(buffer)
+    buffer = loadvideo_decord(clip_path, new_width=320, new_height=256, num_segment=args.num_segments, test_num_segment=args.test_num_segment, keep_aspect_ratio=True)
+    buffer = data_transform(buffer)
     videos = buffer
     videos = videos.to(device, non_blocking=True)
-    print(videos.shape)
+    videos = torch.unsqueeze(videos, 0)
+    print(f'videos: {videos.shape}')
+
+    model.eval()
 
     with torch.no_grad():
-        with torch.cuda.amp.autocast():
-            test_output_ls = []
-            print(videos.shape)
-            for i in range(args.test_num_segment):
-                # print(i * args.num_segments, (i + 1) * args.num_segments)
-                # inputs = videos[:, :, i * args.num_segments:(i + 1) * args.num_segments]
-                inputs = videos[:, i * args.num_segments:(i + 1) * args.num_segments, :, :]
-                print(inputs.shape)
-                inputs = inputs[None, :, :, :, :]
-                print(inputs.shape)
-                print(model(inputs))
-                outputs = model(inputs)
-                test_output_ls.append(outputs)
-            outputs = torch.stack(test_output_ls).mean(dim=0)
-    print(outputs)
+        # with torch.cuda.amp.autocast():
+        test_output_ls = []
+        for i in range(args.test_num_segment):
+            inputs = videos[:, :, i * args.num_segments:(i + 1) * args.num_segments]
+            print(f'inputs: {inputs.shape}')
+            outputs = model(inputs)
+            print(outputs)
+            test_output_ls.append(outputs)
+        outputs = torch.stack(test_output_ls).mean(dim=0)
+        print(outputs)
