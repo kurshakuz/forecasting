@@ -523,9 +523,9 @@ def uniformer_base_320_ego4d_finetune(pretrained=False, **kwargs):
 
 
 @register_model
-def uniformer_base_256_ego4d_finetune_trained(pretrained=False, **kwargs):
+def uniformer_base_320_ego4d_finetune_trained(pretrained=False, **kwargs):
     # model_folder = "/home/dev/workspace/thesis-ego4d/eccv-models/"
-    model_folder = "/workspace/thesis-ego4d/eccv-models/"
+    model_folder = "/content/drive/MyDrive/data_path/"
     ckpt_file_path = model_folder + "ego4d_fhp_uniformer8x320.pth"  # set uniformer pretrain weights
     print(kwargs)
     model = Uniformer(img_size=320, **kwargs)
