@@ -326,13 +326,13 @@ class Ego4dHandsWContactTimeDataset(Dataset):
                                     label[19] = single_hand['right_hand'][1]
                             contact_time = frame_annot['frame']
 
-                    self._labels.append(torch.Tensor(label))
-                    self._labels_masks.append(torch.Tensor(label_mask))
+                    self._labels.append(torch.Tensor([label]))
+                    self._labels_masks.append(torch.Tensor([label_mask]))
 
                     if contact_time != -1.0:
                         contact_diff = contact_time - pre45_frame
-                        self._labels.append(torch.Tensor(contact_diff))
-                        self._labels_masks.append(torch.Tensor(1.0))
+                        self._labels.append(torch.Tensor([contact_diff]))
+                        self._labels_masks.append(torch.Tensor([1.0]))
                     else:
                         self._labels.append(0.0)
                         self._labels_masks.append(0.0)
