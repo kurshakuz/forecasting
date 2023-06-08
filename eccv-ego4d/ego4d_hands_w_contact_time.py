@@ -189,7 +189,7 @@ class SampleFrames:
         return frame_inds
 
 
-class Ego4dHandsDataset(Dataset):
+class Ego4dHandsWContactTimeDataset(Dataset):
     """Load your own video classification dataset."""
 
     def __init__(self, anno_path, data_path, mode='train', clip_len=8,

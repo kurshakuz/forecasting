@@ -5,6 +5,7 @@ from masking_generator import TubeMaskingGenerator
 from kinetics import VideoClsDataset, VideoMAE
 
 from ego4d_hands import Ego4dHandsDataset
+from ego4d_hands_w_contact_time import Ego4dHandsWContactTimeDataset
 
 
 # pretrain for verb
@@ -164,6 +165,34 @@ def build_dataset(is_train, test_mode, args):
             args=args)
         verb_classes = args.nb_verb_classes
         noun_classes = 0
+    elif args.data_set == "ego4d_hands_w_contact_time":
+        if is_train is True:
+            mode = 'train'
+            anno_path = HANDS_TRAINING_ANNO_PATH
+        elif test_mode is True:
+            mode = 'test'
+            anno_path = HANDS_TESTING_ANNO_PATH
+        else:
+            mode = 'validation'
+            anno_path = HANDS_VALIDATION_ANNO_PATH
+        dataset = Ego4dHandsWContactTimeDataset(
+            anno_path=anno_path,
+            data_path=HANDS_VIDEO_PATH,
+            mode=mode,
+            clip_len=args.num_frames,
+            num_segment=args.num_segments,
+            test_num_segment=args.test_num_segment,
+            test_num_crop=args.test_num_crop,
+            num_crop=1 if not test_mode else 3,
+            keep_aspect_ratio=True,
+            crop_size=args.input_size,
+            short_side_size=args.short_side_size,
+            new_height=256,
+            new_width=320,
+            args=args)
+        verb_classes = args.nb_verb_classes
+        noun_classes = 0
+
     else:
         raise NotImplementedError()
 
