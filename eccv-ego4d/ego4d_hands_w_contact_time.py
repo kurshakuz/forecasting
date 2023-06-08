@@ -250,8 +250,8 @@ class Ego4dHandsWContactTimeDataset(Dataset):
                     # placeholder for the 1x20 hand gt vector (padd zero when GT is not available)
                     # 5 frames have the following order: pre_45, pre_40, pre_15, pre, contact
                     # GT for each frames has the following order: left_x,left_y,right_x,right_y
-                    label = [0.0] * 20
-                    label_mask = [0.0] * 20
+                    label = [0.0] * 21
+                    label_mask = [0.0] * 21
                     # for frame_type, frame_annot in hand_annot.items():
                     contact_time = -1.0
                     for frame_type, frame_annot in annot.items():
