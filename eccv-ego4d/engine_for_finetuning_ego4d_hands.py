@@ -450,7 +450,7 @@ def validation_visualization(model, loader, num_vis, outputdir, plot=False):
 
 
 @torch.no_grad()
-def validation_one_epoch(data_loader, model, device, multi_task=False):
+def validation_one_epoch(data_loader, model, device, multi_task=False, use_contact_time=False):
     criterion = nn.SmoothL1Loss(reduction="mean", beta=5.0)
 
     metric_logger = utils.MetricLogger(delimiter="  ")
@@ -474,7 +474,29 @@ def validation_one_epoch(data_loader, model, device, multi_task=False):
         # compute output
 
         with torch.cuda.amp.autocast():
-            if  multi_task:
+            if use_contact_time:
+                outputs = model(videos)
+                reg_out = outputs[:, :21]
+                masks_out = outputs[:, 21:]
+
+                # Coordinate Loss
+                reg_out = reg_out * target_mask
+                avg = target_mask.sum()
+
+                coordinate_loss_fun = nn.SmoothL1Loss(reduction="sum", beta=5.0)
+                coordinate_loss = coordinate_loss_fun(reg_out, target)
+                coordinate_loss = coordinate_loss / avg
+
+                # Existence Loss
+                existence_loss_fun = nn.BCEWithLogitsLoss(reduction="sum")
+                existence_loss = existence_loss_fun(masks_out, target_mask)
+                existence_loss = existence_loss / avg
+
+                # Combined Loss
+                lambda1 = 1.0  # Weight for coordinate loss
+                lambda2 = 1.0  # Weight for existence loss
+                loss = lambda1 * coordinate_loss + lambda2 * existence_loss
+            elif  multi_task:
                 outputs = model(videos)
                 reg_out = outputs[:, :20]
                 existence_logits = outputs[:, 20:]
