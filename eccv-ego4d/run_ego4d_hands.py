@@ -154,7 +154,7 @@ def get_args():
     parser.add_argument('--num_segments', type=int, default=1)
     parser.add_argument('--num_frames', type=int, default=16)
     parser.add_argument('--sampling_rate', type=int, default=4)
-    parser.add_argument('--data_set', default='ego4d', choices=['ego4d_hands', 'ego4d_pnr'],
+    parser.add_argument('--data_set', default='ego4d', choices=['ego4d_hands', 'ego4d_pnr', 'ego4d_hands_w_contact_time'],
                         type=str, help='dataset')
     parser.add_argument('--test_subset', default='val', choices=['val', 'test'],
                         type=str, help='the subset for testing')
@@ -311,7 +311,7 @@ def main(args, ds_init):
             prob=args.mixup_prob, switch_prob=args.mixup_switch_prob, mode=args.mixup_mode,
             label_smoothing=args.smoothing, num_classes=args.nb_verb_classes)
 
-    if args.data_set == "ego4d_hands":
+    if args.data_set == "ego4d_hands" or args.data_set == "ego4d_hands_w_contact_time":
         assert args.nb_verb_classes > 0 and args.nb_noun_classes == 0
         model = create_model(
             args.model,
