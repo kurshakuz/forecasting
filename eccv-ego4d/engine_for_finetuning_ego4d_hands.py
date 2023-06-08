@@ -66,6 +66,32 @@ def train_class_batch_multitask(model, samples, target, masks):
     return combined_loss, outputs
 
 
+def train_class_batch_multitask_contact(model, samples, target, masks):
+    outputs = model(samples)
+    reg_out = outputs[:, :21]
+    masks_out = outputs[:, 21:]
+
+    # Coordinate Loss
+    reg_out = reg_out * masks
+    avg = masks.sum()
+
+    coordinate_loss_fun = nn.SmoothL1Loss(reduction="sum", beta=5.0)
+    coordinate_loss = coordinate_loss_fun(reg_out, target)
+    coordinate_loss = coordinate_loss / avg
+
+    # Existence Loss
+    existence_loss_fun = nn.BCEWithLogitsLoss(reduction="sum")
+    existence_loss = existence_loss_fun(masks_out, masks)
+    existence_loss = existence_loss / avg
+
+    # Combined Loss
+    lambda1 = 1.0  # Weight for coordinate loss
+    lambda2 = 1.0  # Weight for existence loss
+    combined_loss = lambda1 * coordinate_loss + lambda2 * existence_loss
+
+    return combined_loss, outputs
+
+
 def get_loss_scale_for_deepspeed(model):
     optimizer = model.optimizer
     return optimizer.loss_scale if hasattr(optimizer, "loss_scale") else optimizer.cur_scale
@@ -76,7 +102,7 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
                     device: torch.device, epoch: int, loss_scaler, max_norm: float = 0,
                     model_ema: Optional[ModelEma] = None, mixup_fn: Optional[Mixup] = None, log_writer=None,
                     start_steps=None, lr_schedule_values=None, wd_schedule_values=None,
-                    num_training_steps_per_epoch=None, update_freq=None, multi_task=False):
+                    num_training_steps_per_epoch=None, update_freq=None, multi_task=False, use_contact_time=False):
     model.train(True)
     metric_logger = utils.MetricLogger(delimiter="  ")
     metric_logger.add_meter('lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
@@ -124,7 +150,10 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
 
         if loss_scaler is None:
             samples = samples.half()
-            if multi_task:
+            if use_contact_time:
+                loss, output = train_class_batch_multitask_contact(
+                    model, samples, targets, targets_mask)
+            elif multi_task:
                 loss, output = train_class_batch_multitask(
                     model, samples, targets, targets_mask)
             else:
@@ -132,7 +161,10 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
                     model, samples, targets, targets_mask)
         else:
             with torch.cuda.amp.autocast():
-                if multi_task:
+                if use_contact_time:
+                    loss, output = train_class_batch_multitask_contact(
+                        model, samples, targets, targets_mask)
+                elif multi_task:
                     loss, output = train_class_batch_multitask(
                         model, samples, targets, targets_mask)
                 else:
@@ -537,6 +569,9 @@ def final_test(data_loader, model, device, args):
                 test_output_ls.append(outputs)
             outputs = torch.stack(test_output_ls).mean(dim=0)
             if "test" not in mode:
+                if args.multi_task:
+                    # calculate only the coordinate loss for the final submission
+                    outputs = outputs[:, :20].copy()
                 outputs = outputs * target_mask
                 avg = target_mask.sum()
                 loss_fun = nn.SmoothL1Loss(reduction="sum", beta=5.0)
