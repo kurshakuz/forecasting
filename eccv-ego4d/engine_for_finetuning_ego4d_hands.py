@@ -592,7 +592,7 @@ def final_test(data_loader, model, device, args):
             outputs = torch.stack(test_output_ls).mean(dim=0)
             if args.use_contact_time or args.multi_task:
                 # calculate only the contact time loss for the final submission
-                outputs = outputs[:, :20].copy()
+                outputs = outputs[:, :20]
             if "test" not in mode:
                 outputs = outputs * target_mask
                 avg = target_mask.sum()
