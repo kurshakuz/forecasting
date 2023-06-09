@@ -590,10 +590,10 @@ def final_test(data_loader, model, device, args):
                 outputs = model(inputs)
                 test_output_ls.append(outputs)
             outputs = torch.stack(test_output_ls).mean(dim=0)
+            if args.use_contact_time or args.multi_task:
+                # calculate only the contact time loss for the final submission
+                outputs = outputs[:, :20].copy()
             if "test" not in mode:
-                if args.use_contact_time or args.multi_task:
-                    # calculate only the contact time loss for the final submission
-                    outputs = outputs[:, :20].copy()
                 outputs = outputs * target_mask
                 avg = target_mask.sum()
                 loss_fun = nn.SmoothL1Loss(reduction="sum", beta=5.0)
