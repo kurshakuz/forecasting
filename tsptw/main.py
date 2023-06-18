@@ -25,7 +25,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='Solves the Time-Dependent Traveling Salesman Problem (TSPTW).',
                                      add_help=True)
     parser.add_argument('-i', '--iter_max', type=int, default=30, help='Maximum number of iterations.')
-    parser.add_argument('-f', '--file_name', type=str, default='n20w20.001.txt', help='File name of the input data.')
+    parser.add_argument('-f', '--file_name', type=str, default='./benchmarks/n20w20.001.txt', help='File name of the input data.')
     parser.add_argument('-l', '--level_max', type=int, default=8, help='Range of the local search.')
     parser.add_argument('-r', '--rdy', action='store_const', const='rdy', dest='initial_path_type', help='Sets initial path type to "rdy".')
     parser.add_argument('-d', '--due', action='store_const', const='due', dest='initial_path_type', help='Sets initial path type to "due".')
@@ -45,13 +45,13 @@ def parse_arguments():
     return args
 
 
-def main(iter_max, level_max, file_name, initial_path_type):
+def main(iter_max, level_max, initial_path_type, file_name):
     """
     Main function that initiates and solves the TSPTW problem.
     """
     logging.info('Starting main function...')
     
-    tsptw = TSPTW(iter_max, level_max, file_name, initial_path_type)
+    tsptw = TSPTW(iter_max, level_max, initial_path_type, file_name)
     result = tsptw.solve()
     # tsptw = TSPTW(iter_max, level_max, file_name, initial_path_type)
     # customers = tsptw.load_customers_from_file(file_name)
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     args = parse_arguments()
 
     start_time = time.time()
-    main(args.iter_max, args.level_max, args.file_name, args.initial_path_type)
+    main(args.iter_max, args.level_max, args.initial_path_type, args.file_name)
     end_time = time.time()
 
     elapsed_time = end_time - start_time

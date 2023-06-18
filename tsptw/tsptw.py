@@ -4,12 +4,13 @@ import copy
 from customer import Customer
 from route import Route
 from optimizer import Optimizer
+from hands_tsptw import load_customers_from_predictions
 
 
 class TSPTW:
     """Solves the Traveling Salesman Problem with Time Windows (TSPTW)."""
 
-    def __init__(self, iter_max, level_max, file_name, initial_path_type):
+    def __init__(self, iter_max, level_max, initial_path_type, file_name=None, preds=None):
         """
         Initializes a TSPTW solver.
 
@@ -22,7 +23,11 @@ class TSPTW:
         self.iter_max = iter_max
         self.level_max = level_max
         self.raw_data_file_name = file_name
-        self.customers = self.load_customers_from_file(file_name)
+        if file_name is not None:
+            self.customers = self.load_customers_from_file(file_name)
+        else:
+            self.customers = load_customers_from_predictions(preds)[0]
+        print(self.customers)
         self.best_route = Route(self.customers)
         self.optimizer = Optimizer(level_max, initial_path_type)
         self.optimizer.distance_matrix = self.optimizer.calculate_distance_matrix(self.best_route.customers)

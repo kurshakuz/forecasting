@@ -91,7 +91,9 @@ class Optimizer:
         Route: Route object with an improved feasible path.
         """
         solution_found = False
+        MAX_ITER = 1000
         while not solution_found:
+            iter = 0
             level = 1
             route.path = self.build_initial_solution(route)
             if is_feasible(route.path, route.customers, self.distance_matrix):
@@ -111,6 +113,11 @@ class Optimizer:
                 if is_feasible(route.path, route.customers, self.distance_matrix):
                     route.path = route.path
                     solution_found = True
+                iter += 1
+                if iter > MAX_ITER:
+                    print("Solution not found")
+                    solution_found = True
+                    break
         return route
 
     def build_feasible_solution(self, customers): # VNS - Constructive phase
