@@ -11,7 +11,7 @@ import volume_transforms as volume_transforms
 
 data_path = '/workspace/data'
 # model_path = '/workspaces/thesis-ws/ego4d_fhp_uniformer8x320.pth'
-model_path = '/workspace/train_models/checkpoint-13.pth'
+model_path = '/workspace/train_models/checkpoint-13-multitask.pth'
 
 
 def loadvideo_decord(sample, new_width=340, new_height=256, num_segment=1, test_num_segment=10, keep_aspect_ratio=True):
@@ -47,7 +47,7 @@ def loadvideo_decord(sample, new_width=340, new_height=256, num_segment=1, test_
         all_index.extend(tmp_index)
     all_index = list(np.array(all_index))
     # all_index = list(np.sort(np.array(all_index)))
-    print("all_index: ", all_index)
+    # print("all_index: ", all_index)
     vr.seek(0)
     buffer = vr.get_batch(all_index).asnumpy()
     return buffer
@@ -58,7 +58,8 @@ class AttrDict(dict):
         super(AttrDict, self).__init__(*args, **kwargs)
         self.__dict__ = self
 
-if __name__ == '__main__':
+
+def predict_hands_on_video(clip_name):
     args = AttrDict({
         'model': 'uniformer_base_320_ego4d_finetune',
         'nb_verb_classes': 42,
@@ -67,12 +68,10 @@ if __name__ == '__main__':
         'finetune': model_path,
         'input_size': 320,
         'short_side_size': 320,
-        'test_num_segment': 8,
-        'device': 'cuda',
+        'test_num_segment': 1,
+        'device': 'cpu',
     })
 
-    # clip_name = "258_12542"
-    clip_name = "8_8890"
     clip_path = os.path.join(data_path, 'cropped_videos_ant', clip_name + '.mp4')
 
     assert args.nb_verb_classes > 0 and args.nb_noun_classes == 0
@@ -98,13 +97,12 @@ if __name__ == '__main__':
     ])
     
     print(clip_path)
-
     buffer = loadvideo_decord(clip_path, new_width=320, new_height=256, num_segment=args.num_segments, test_num_segment=args.test_num_segment, keep_aspect_ratio=True)
     buffer = data_transform(buffer)
     videos = buffer
     videos = videos.to(device, non_blocking=True)
     videos = torch.unsqueeze(videos, 0)
-    print(f'videos: {videos.shape}')
+    # print(f'videos: {videos.shape}')
 
     model.eval()
 
@@ -118,11 +116,23 @@ if __name__ == '__main__':
             # print(outputs)
             test_output_ls.append(outputs)
         outputs = torch.stack(test_output_ls).mean(dim=0)
-        print(outputs)
+        # print(outputs)
         reg_out = outputs[:, :21]
         masks_out = outputs[:, 21:]
         masks = (masks_out > 0.4).float()
 
         # Coordinate Loss
         reg_out = reg_out * masks
-        print(reg_out)
+        # print(reg_out)
+
+        if args.device != 'cpu':
+            return reg_out.numpy()
+        else:
+            return reg_out.cpu().numpy()
+
+if __name__ == '__main__':
+
+    clip_name = "258_12542"
+    # clip_name = "8_8890"
+    result = predict_hands_on_video(clip_name)
+    print(result)
