@@ -94,6 +94,9 @@ class Optimizer:
         while not solution_found:
             level = 1
             route.path = self.build_initial_solution(route)
+            if is_feasible(route.path, route.customers, self.distance_matrix):
+                route.path = route.path
+                solution_found = True
             while not is_feasible(route.path, route.customers, self.distance_matrix) and level < self.level_max:
                 potential_route = self.perform_perturbation(level, route)
                 potential_route.path = self.construction_local_shift(potential_route)
@@ -108,7 +111,7 @@ class Optimizer:
                 if is_feasible(route.path, route.customers, self.distance_matrix):
                     route.path = route.path
                     solution_found = True
-        return route   
+        return route
 
     def build_feasible_solution(self, customers): # VNS - Constructive phase
         """
@@ -122,7 +125,7 @@ class Optimizer:
         """
         feasible_route = Route(customers)
         feasible_route = self.VNS(feasible_route)
-        
+
         return feasible_route
         
     def calculate_distance_matrix(self, customers):
@@ -392,8 +395,8 @@ class Optimizer:
                     # Perform 2-opt swap: reverse the section of the path between customer i and j
                     new_path[i:j] = path[j - 1:i - 1:-1]
                     
-                    new_distance = self.calculate_cost(new_path, customers)
-                    best_distance = self.calculate_cost(best_path, customers)
+                    new_distance = self.optimization_calculate_objective(new_path, customers)
+                    best_distance = self.optimization_calculate_objective(best_path, customers)
                     if new_distance < best_distance:
                         best_path = new_path.copy()
                         improved = True
@@ -615,7 +618,7 @@ class Optimizer:
         """
         level = 1
         improvement = True
-        
+
         while improvement:
             prime_potential_route = copy.deepcopy(route)
             star_potential_route = copy.deepcopy(route)
