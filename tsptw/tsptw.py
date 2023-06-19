@@ -4,7 +4,7 @@ import copy
 from customer import Customer
 from route import Route
 from optimizer import Optimizer
-from hands_tsptw import load_customers_from_predictions
+from hands_helpers import load_customers_from_predictions
 
 
 class TSPTW:
@@ -23,16 +23,20 @@ class TSPTW:
         self.iter_max = iter_max
         self.level_max = level_max
         self.raw_data_file_name = file_name
+        self.optimizer = Optimizer(level_max, initial_path_type)
+
         if file_name is not None:
             self.customers = self.load_customers_from_file(file_name)
+            self.best_route = Route(self.customers)
+            self.optimizer.distance_matrix = self.optimizer.calculate_distance_matrix(self.best_route.customers)
         else:
-            self.customers = load_customers_from_predictions(preds)[0]
-        print(self.customers)
-        self.best_route = Route(self.customers)
-        self.optimizer = Optimizer(level_max, initial_path_type)
-        self.optimizer.distance_matrix = self.optimizer.calculate_distance_matrix(self.best_route.customers)
+            self.customers_list = load_customers_from_predictions(preds)
+            # initialize empty route
+            self.best_route = Route(self.customers_list[0])
+            # distance matrix is static for all instances
+            self.optimizer.distance_matrix = self.optimizer.calculate_distance_matrix(self.best_route.customers)
 
-    def solve(self):
+    def solve(self, customers):
         """
         Solves the TSPTW.
 
@@ -40,20 +44,14 @@ class TSPTW:
             best_route: Best route found.
         """
         iter_count = 0
-        best_route = Route(self.customers)
-        best_route.path = []
-
         while iter_count < self.iter_max:
-            print(f"Iteration {iter_count + 1} of {self.iter_max}")
+            # print(f"Iteration {iter_count + 1} of {self.iter_max}")
             iter_count += 1
-
-            route = self.optimizer.build_feasible_solution(self.customers)
+            route = self.optimizer.build_feasible_solution(customers)
             route = self.optimizer.GVNS(route)
+            self.best_route.path = copy.deepcopy(self.optimizer.choose_better_path(route.path, self.best_route.path, customers))
 
-            best_route = Route(route.customers[:])
-            best_route.path = copy.deepcopy(self.optimizer.choose_better_path(route.path, self.best_route.path, self.customers))
-
-        return best_route
+        return self.best_route
 
     @staticmethod
     def load_customers_from_file(filename):
