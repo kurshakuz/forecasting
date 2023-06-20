@@ -81,13 +81,17 @@ def write_snippet(snippet_frames, snippet_num):
 def create_tempfile(snippet_frames):
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     height, width, _ = snippet_frames[0].shape
+    new_height = 340
+    new_width = int(width * (new_height / height))
+    dim = (new_width, new_height)
 
     with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as temp_file:
         output_name = temp_file.name
-        out = cv2.VideoWriter(output_name, fourcc, 30.0, (width, height))
+        out = cv2.VideoWriter(output_name, fourcc, 30.0, dim)
 
         for frame in snippet_frames:
-            out.write(frame)
+            res_frame = cv2.resize(frame, dim)
+            out.write(res_frame)
 
         out.release()
         print(f'Snippet {output_name} created.')
