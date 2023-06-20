@@ -1,5 +1,5 @@
 import cv2
-
+import tempfile
 
 def create_snippets_video(video_path, snippet_length, overlap_length):
     cap = cv2.VideoCapture(video_path)
@@ -78,10 +78,28 @@ def write_snippet(snippet_frames, snippet_num):
     print(f'Snippet {output_name} created.')
 
 
-# Usage
-video_path = '/home/dev/workspace/sample_videos/30da536e-4848-4d54-8f2b-6fe1ad54be11.mp4'
-snippet_length = 2  # in seconds
-overlap_length = 1  # in seconds
+def create_tempfile(snippet_frames):
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    height, width, _ = snippet_frames[0].shape
 
-# create_snippets_video(video_path, snippet_length, overlap_length)
-create_snippets_camera(snippet_length, overlap_length)
+    with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as temp_file:
+        output_name = temp_file.name
+        out = cv2.VideoWriter(output_name, fourcc, 30.0, (width, height))
+
+        for frame in snippet_frames:
+            out.write(frame)
+
+        out.release()
+        print(f'Snippet {output_name} created.')
+
+    return output_name
+
+
+if __name__ == '__main__':
+    # Usage
+    video_path = '/home/dev/workspace/sample_videos/30da536e-4848-4d54-8f2b-6fe1ad54be11.mp4'
+    snippet_length = 2  # in seconds
+    overlap_length = 1  # in seconds
+
+    create_snippets_video(video_path, snippet_length, overlap_length)
+    # create_snippets_camera(snippet_length, overlap_length)
