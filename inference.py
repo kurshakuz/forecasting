@@ -16,6 +16,9 @@ import volume_transforms as volume_transforms
 import video_transforms as video_transforms
 import modeling_finetune_uniformer_ego4d
 
+sys.path.append(os.path.join(os.path.dirname(__file__), 'tsptw'))
+from main_hands import hands_tsptw_solver
+
 # data_path = '/workspace/data'
 data_path = '/home/dev/workspace/sample_videos'
 # model_path = '/workspaces/thesis-ws/ego4d_fhp_uniformer8x320.pth'
@@ -152,7 +155,7 @@ class Inferencer:
             else:
                 return reg_out.cpu().numpy()
 
-    def predict_memory(self, temp_file_path):
+    def predict_in_memory(self, temp_file_path):
         buffer = loadvideo_decord(temp_file_path, new_width=320, new_height=256, num_segment=self.args.num_segments,
                                   test_num_segment=self.args.test_num_segment, keep_aspect_ratio=True)
         buffer = self.data_transform(buffer)
@@ -217,8 +220,9 @@ def inference_snippets_video(video_path, snippet_length, overlap_length):
             if frame_num % overlap_frames == 0 or frame_num == total_frames:
                 snippet = buffer_frames.copy()
                 temp_file_path = create_tempfile(snippet)
-                result = inferencer.predict_memory(temp_file_path)
+                result = inferencer.predict_in_memory(temp_file_path)
                 print(result)
+                hands_tsptw_solver(30, 8, 'rdy', result)
                 snippet_num += 1
 
     cap.release()

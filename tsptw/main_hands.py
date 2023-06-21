@@ -43,15 +43,15 @@ def parse_arguments():
     return args
 
 
-def main(iter_max, level_max, initial_path_type):
+def hands_tsptw_solver(iter_max, level_max, initial_path_type, preds=None):
     """
     Main function that initiates and solves the TSPTW problem.
     """
     logging.info('Starting main function...')
 
-    preds = np.array([[158.2681, 204.52983, 203.10486, 206.61021, 153.7534, 204.46507, 209.63512,
-                       206.24173, 149.51596, 205.16443, 215.93907, 205.83598, 144.41257, 205.06213,
-                       219.77278, 201.92041, 0., 0., 0., 0., 0.]])
+    # preds = np.array([[158.2681, 204.52983, 203.10486, 206.61021, 153.7534, 204.46507, 209.63512,
+    #                    206.24173, 149.51596, 205.16443, 215.93907, 205.83598, 144.41257, 205.06213,
+    #                    219.77278, 201.92041, 0., 0., 0., 0., 0.]])
 
     tsptw = TSPTW(iter_max, level_max, initial_path_type, file_name=None, preds=preds)
 
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     args = parse_arguments()
 
     start_time = time.time()
-    main(args.iter_max, args.level_max, args.initial_path_type)
+    hands_tsptw_solver(args.iter_max, args.level_max, args.initial_path_type)
     end_time = time.time()
 
     elapsed_time = end_time - start_time
