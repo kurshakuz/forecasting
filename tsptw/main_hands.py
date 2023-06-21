@@ -54,14 +54,13 @@ def hands_tsptw_solver(iter_max, level_max, initial_path_type, preds=None):
     #                    219.77278, 201.92041, 0., 0., 0., 0., 0.]])
 
     tsptw = TSPTW(iter_max, level_max, initial_path_type, file_name=None, preds=preds)
+    full_plan = np.empty((0, 5))
 
     for customer in tsptw.customers_list:
         result = tsptw.solve(customer)
-        print(result.path)
-        # logging.info(f'Best route found: {result.path}')
-        # logging.info(f'Best roue cost: {tsptw.optimizer.calculate_cost(result.path, result.customers)}')
-        # logging.info(f'Best route feasible: {is_feasible(result.path, result.customers, tsptw.optimizer.distance_matrix)}')
-        # print(tsptw.best_route)
+        full_plan = np.vstack((full_plan, result.path))
+
+    return full_plan
 
 if __name__ == "__main__":
     args = parse_arguments()
