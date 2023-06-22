@@ -49,6 +49,7 @@
   <!-- Use doc_depend for packages you need only for building documentation: -->
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>sensor_msgs</build_depend> 
   <run_depend>moveit_ros_move_group</run_depend>
   <run_depend>cv_bridge</run_depend>
   <run_depend>moveit_fake_controller_manager</run_depend>
@@ -62,6 +63,10 @@
   <run_depend>moveit_chomp_optimizer_adapter</run_depend>
   <run_depend>xacro</run_depend>
   <run_depend>topic_tools</run_depend>
+  <run_depend>rospkg</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>opencv2</run_depend>
+  <run_depend>actionlib_msgs</run_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
