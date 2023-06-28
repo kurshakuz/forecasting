@@ -58,21 +58,24 @@ def generate_hand_squares(hand_size, preds_pairs):
     squares = []
     for i, pair in enumerate(preds_pairs):
         pair = pair[0]
-        pair[pair == 0.0] += 10000
         x_l = pair[0]
         y_l = pair[1]
         x_r = pair[2]
         y_r = pair[3]
+        square_height = hand_size
 
-        square_x_l = 320*i + x_l-hand_size/2
-        square_y_l = y_l-hand_size/2
-        square_x_r = 320*i + x_r-hand_size/2
-        square_y_r = y_r-hand_size/2
-        square_size = hand_size
+        if not (x_l==0.0 or y_l==0.0):
+          square_x_l = 320*i + x_l-hand_size/2
+          square_y_l = y_l-hand_size/2
+          square_width_l = min(hand_size-0.01-(square_x_l+hand_size-320*(i+1)), hand_size)
+          squares.append(InspectionSpace(square_x_l, square_y_l, square_width_l, square_height, -1, -1))
 
-        squares.append(InspectionSpace(square_x_l, square_y_l, square_size, square_size, -1, -1))
-        squares.append(InspectionSpace(square_x_r, square_y_r, square_size, square_size, -1, -1))
-    
+        if not (x_r==0.0 or y_r==0.0):
+          square_x_r = 320*i + x_r-hand_size/2
+          square_y_r = y_r-hand_size/2
+          square_width_r = min(hand_size-0.01-(square_x_r+hand_size-320*(i+1)), hand_size)
+          squares.append(InspectionSpace(square_x_r, square_y_r, square_width_r, square_height, -1, -1))
+
     return squares
 
 def define_regions_and_intersections(frame_width, num_regions, reg_preds_pairs):
