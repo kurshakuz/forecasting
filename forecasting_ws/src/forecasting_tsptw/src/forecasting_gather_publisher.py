@@ -27,7 +27,7 @@ class ForecastingPublisher:
         self.initialized = False
         rospy.init_node('forecasting_publisher_node', anonymous=True)
         self.pub = rospy.Publisher('forecasting_topic', Float64MultiArray, queue_size=1)
-        self.image_sub = rospy.Subscriber('image_topic', Image, self.image_callback)
+        self.image_sub = rospy.Subscriber('/zed2i_resized_raw', Image, self.image_callback)
         rospy.loginfo("Forecasting publisher node started")
 
         self.fps = 30  # Assuming the webcam captures at 30 frames per second
@@ -51,6 +51,9 @@ class ForecastingPublisher:
         except ValueError:
             rospy.logwarn("Failed to convert image message to numpy array")
             return
+
+        # Dimension reduction for the zed camera
+        frame = frame[:,:,0:3]
 
         self.frame_num += 1
         self.buffer_frames.append(frame)
