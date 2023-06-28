@@ -144,7 +144,7 @@ class Inferencer:
             # print(outputs)
             reg_out = outputs[:, :21]
             masks_out = outputs[:, 21:]
-            masks = (masks_out > 0.4).float()
+            masks = (masks_out > 0.7).float()
 
             # Coordinate Loss
             reg_out = reg_out * masks
@@ -179,7 +179,7 @@ class Inferencer:
             # print(outputs)
             reg_out = outputs[:, :21]
             masks_out = outputs[:, 21:]
-            masks = (masks_out > 0.4).float()
+            masks = (masks_out > 0.7).float()
 
             # Coordinate Loss
             reg_out = reg_out * masks
