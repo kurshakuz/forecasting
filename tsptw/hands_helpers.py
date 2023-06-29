@@ -67,13 +67,25 @@ def generate_hand_squares(hand_size, preds_pairs):
         if not (x_l==0.0 or y_l==0.0):
           square_x_l = 320*i + x_l-hand_size/2
           square_y_l = y_l-hand_size/2
-          square_width_l = min(hand_size-0.01-(square_x_l+hand_size-320*(i+1)), hand_size)
+          if square_x_l+hand_size > 320*(i+1):
+            square_width_l = min(hand_size-0.01-(square_x_l+hand_size-320*(i+1)), hand_size)
+          elif square_x_l < 320*i:
+            square_width_l = 320*i - square_x_l
+            square_x_l = 320*i + 0.01
+          else:
+            square_width_l = hand_size
           squares.append(InspectionSpace(square_x_l, square_y_l, square_width_l, square_height, -1, -1))
 
         if not (x_r==0.0 or y_r==0.0):
           square_x_r = 320*i + x_r-hand_size/2
           square_y_r = y_r-hand_size/2
-          square_width_r = min(hand_size-0.01-(square_x_r+hand_size-320*(i+1)), hand_size)
+          if square_x_r+hand_size > 320*(i+1):
+            square_width_r = min(hand_size-0.01-(square_x_r+hand_size-320*(i+1)), hand_size)
+          elif square_x_r < 320*i:
+            square_width_r = 320*i - square_x_r
+            square_x_r = 320*i + 0.01
+          else:
+            square_width_r = hand_size
           squares.append(InspectionSpace(square_x_r, square_y_r, square_width_r, square_height, -1, -1))
 
     return squares
@@ -83,7 +95,7 @@ def define_regions_and_intersections(frame_width, num_regions, reg_preds_pairs):
     region_height = 100
     region_width = frame_width / num_regions
 
-    hand_size = 50
+    hand_size = 40
     squares = generate_hand_squares(hand_size, reg_preds_pairs)
     rectangles = generate_rectangles(num_regions, region_height_start, region_width, region_height)
     intersecting = find_intersecting_rectangles(rectangles, squares)
@@ -106,12 +118,8 @@ def plot_hands(rectangles, squares, intersecting):
     for i in range(4):
         plt.plot([320*(i+1), 320*(i+1)], [0, 320], color="black", linewidth=1)
 
-    # plot hands
-    for square_l, square_r in zip(squares[::2], squares[1::2]) :
-        # left hand
-        plt.gca().add_patch(Rectangle((square_l.x, square_l.y), square_l.width, square_l.height, linewidth=1, edgecolor='b', facecolor='none'))
-        # right hand
-        plt.gca().add_patch(Rectangle((square_r.x, square_r.y), square_r.width, square_r.height, linewidth=1, edgecolor='b', facecolor='none'))
+    for square in squares:
+      plt.gca().add_patch(Rectangle((square.x, square.y), square.width, square.height, linewidth=1, edgecolor='b', facecolor='none'))
 
     # Plotting the intersecting rectangles
     for rectangle in intersecting:

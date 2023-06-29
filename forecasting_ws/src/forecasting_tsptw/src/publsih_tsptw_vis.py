@@ -27,16 +27,13 @@ def draw_hands(rectangles, squares, intersecting):
     img = np.zeros([320, 320 * 5, 3], dtype=np.uint8)
     img.fill(255)
 
-    for rectangle in rectangles:
-        draw_rectangles(img, [rectangle], (0, 255, 0))  # Green color for rectangles
+    draw_rectangles(img, rectangles, (0, 255, 0))  # Green color for rectangles
 
     # Line separators
     for i in range(4):
         cv2.line(img, (320 * (i + 1), 0), (320 * (i + 1), 320), (0, 0, 0), 3)  # Black color for lines
 
-    # Plotting the hands
-    for square_l, square_r in zip(squares[::2], squares[1::2]):
-        draw_rectangles(img, [square_l, square_r], (255, 0, 0))  # Blue color for hands
+    draw_rectangles(img, squares, (255, 0, 0))  # Blue color for hands
 
     # Plotting the intersecting rectangles
     draw_rectangles(img, intersecting, (0, 0, 255))  # Red color for intersecting rectangles
@@ -44,12 +41,9 @@ def draw_hands(rectangles, squares, intersecting):
     return img
 
 def draw_hands_on_image(img, rectangles, squares, intersecting):
-    for rectangle in rectangles:
-        draw_rectangles(img, [rectangle], (0, 255, 0))  # Green color for rectangles
+    draw_rectangles(img, rectangles, (0, 255, 0))  # Green color for rectangles
 
-    # # Plotting the hands
-    # for square_l, square_r in zip(squares[::2], squares[1::2]):
-    #     draw_rectangles(img, [square_l, square_r], (255, 0, 0))  # Blue color for hands
+    # draw_rectangles(img, squares, (255, 0, 0))  # Blue color for hands
 
     # Plotting the intersecting rectangles
     draw_rectangles(img, intersecting, (0, 0, 255))  # Red color for intersecting rectangles
@@ -72,7 +66,7 @@ class TSPTWVisPubNode:
         self.cv_bridge = CvBridge()
 
         self.frame_width = 320
-        self.num_regions = 3
+        self.num_regions = 4
 
         self.last_preds = None
 
