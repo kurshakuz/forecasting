@@ -8,7 +8,7 @@ from std_msgs.msg import Float64MultiArray
 from sensor_msgs.msg import Image
 import sys
 
-worksapce_path = '/home/dev/workspace/thesis-ws'
+worksapce_path = '/home/shyngys/workspace/thesis-ws'
 
 sys.path.append(os.path.join(worksapce_path))
 from video_sampler import create_tempfile

@@ -13,7 +13,7 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import cv2
 
-worksapce_path = '/home/dev/workspace/thesis-ws'
+worksapce_path = '/home/shyngys/workspace/thesis-ws'
 sys.path.append(os.path.join(worksapce_path, 'tsptw'))
 from hands_helpers import define_regions_and_intersections
 

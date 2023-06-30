@@ -7,7 +7,7 @@ import rospy
 from std_msgs.msg import Float64MultiArray
 
 
-worksapce_path = '/home/dev/workspace/thesis-ws'
+worksapce_path = '/home/shyngys/workspace/thesis-ws'
 sys.path.append(os.path.join(worksapce_path, 'tsptw'))
 from main_hands import hands_tsptw_solver
 

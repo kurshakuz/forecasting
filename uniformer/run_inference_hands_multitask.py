@@ -12,8 +12,8 @@ import volume_transforms as volume_transforms
 # data_path = '/workspace/data'
 data_path = '/home/dev/workspace/sample_videos'
 # model_path = '/workspaces/thesis-ws/ego4d_fhp_uniformer8x320.pth'
-# model_path = '/workspace/train_models/checkpoint-13-multitask.pth'
-model_path = '/home/dev/workspace/train_models/checkpoint-13-multitask.pth'
+# model_path = '/workspace/train-models/checkpoint-13-multitask.pth'
+model_path = '/home/shyngys/workspace/train-models/checkpoint-13-multitask.pth'
 
 
 def loadvideo_decord(sample, new_width=340, new_height=256, num_segment=1, test_num_segment=10, keep_aspect_ratio=True):
