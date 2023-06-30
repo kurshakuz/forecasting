@@ -5,10 +5,6 @@ images_det/
 *.mp4
 *.pkl
 detector/lib/build
-*.c
-*.cpp
-*.so
-*.pth
 *.tar
 ego4d/aws/
 aws/
