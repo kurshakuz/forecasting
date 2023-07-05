@@ -137,7 +137,7 @@ def generate_tsptw_instances(frame_width, num_regions, rectangles, intersecting)
         id = 1
         # customers.append(Customer(id, point, rdy_time, due_date, serv_time))
         customers = []
-        customers.append(Customer(id, (-40, 140), 0*time_scaler, 2*time_scaler, 0.0))
+        customers.append(Customer(id, (160, 80), 0*time_scaler, 2*time_scaler, 0.0))
         id += 1
         for rectangle in rectangles[i*num_regions:(i+1)*num_regions]:
             # print(rectangle.center)
