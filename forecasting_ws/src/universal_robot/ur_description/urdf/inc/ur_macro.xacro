@@ -334,45 +334,32 @@
     </joint>
 
 
-  <!-- Add tool -->
-  <joint name="${prefix}gripper_fixed_joint" type="fixed">
-    <parent link="${prefix}tool0"/>
-    <child link="${prefix}gripper_link"/>
-    <origin xyz="${0.0} ${0.0} ${0.075}" rpy="${0} ${pi} ${-pi/4}"/>
-  </joint>
-  <link name="${prefix}gripper_link">
-    <visual>
-      <geometry>
-        <mesh filename="package://ur_description/meshes/ur10e/visual/Endeffektor_CHeckbot_ZBau.dae"/>
-      </geometry>
-      <material name="Black">
-        <color rgba="1.0 1.0 1.0 1.0"/>
-      </material>
-    </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0.04"/>  
-      <geometry>
-        <sphere radius="0.057"/>
-      </geometry>
-    </collision>
-    <collision>
-      <origin rpy="0 0 0" xyz="-0.03 0 -0.130"/>  
-      <geometry>
-        <sphere radius="0.07"/>
-      </geometry>
-    </collision>
-    <collision>
-      <origin rpy="0 0 0" xyz="0.03 0 -0.130"/>  
-      <geometry>
-        <sphere radius="0.07"/>
-      </geometry>
-    </collision>
-  </link>
+    <!-- Add tool -->
+    <joint name="${prefix}gripper_fixed_joint" type="fixed">
+      <parent link="${prefix}tool0"/>
+      <child link="${prefix}gripper_link"/>
+      <origin xyz="${0.0} ${0.0} ${0.0}" rpy="${0} 0 ${-pi}"/>
+    </joint>
+    <link name="${prefix}gripper_link">
+      <visual>
+        <geometry>
+          <mesh filename="package://ur_description/meshes/ur10e/visual/zed2i_ee.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="Black">
+          <color rgba="1.0 1.0 1.0 1.0"/>
+        </material>
+      </visual>
+      <collision>
+        <geometry>
+          <mesh filename="package://ur_description/meshes/ur10e/collision/zed2i_ee_col.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+    </link>
 
     <!-- Camera -->
     <joint name="${prefix}camera_joint" type="fixed">
       <axis xyz="0 1 0" />
-      <origin xyz="0.05 0.0 -0.17" rpy="${3*pi/4} ${pi/2} 0"/>
+      <origin xyz="0.0 0.0425 0.0625" rpy="${-pi/2} ${-pi/2} ${0.0}"/>
       <parent link="${prefix}gripper_link"/>
       <child link="${prefix}camera_link"/>
     </joint>
@@ -384,15 +371,6 @@
           <box size="${0.02} ${0.02} ${0.02}"/>
         </geometry>
       </collision>
-      <visual>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <geometry>
-          <box size="${0.02} ${0.02} ${0.02}"/>
-        </geometry>
-        <material name="LightGrey">
-          <color rgba="0.7 0.7 0.7 1.0"/>
-        </material>
-      </visual>
       <inertial>
         <mass value="1e-5" />
         <origin xyz="0 0 0" rpy="0 0 0"/>
