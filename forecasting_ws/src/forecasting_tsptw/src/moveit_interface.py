@@ -17,12 +17,18 @@ from moveit_commander.exception import MoveItCommanderException
 
 from all_close import all_close
 
+from math import pi, tau, dist, fabs, cos
+
 """CONSTANTS:"""
 
 # offset scale to move targets in orthogonal directions
 DIST_SCALE = 0.02
 
-HOME_POSE = [0.18059420288171502, 0.3219906149681194, 0.30261826442649115, -0.7692760100441558, -0.008125941611489511, -0.006503281370102989, 0.638831821980474]
+HOME_JOINT_POSE = [-1.5664790887701328, -1.4255304565125417, -2.5255187899809455, -2.5519784422942475, -1.6016935564692556, 3.150484917203115]
+POSE_1 = [-2.200340218567459, -2.0805938406156006, -1.7427202845207086, -2.734451289766482, -2.217025606956147, 2.989070354433986]
+POSE_2 = [-1.728227373795077, -1.7867145550830044, -2.1741083746067913, -2.544794924096707, -1.7588379407638461, 3.114960675531224]
+POSE_3 = [-0.9402553596452359, -1.7300824791315872, -2.2452055698186575, -2.569457997910006, -0.9916214780682919, 3.3026884231409217]
+POSE_4 = [-0.5067101763963846, -2.0178442624052915, -1.8387706311145848, -2.857213982806627, -0.5443066560290424, 3.523212810474581]
 
 class CheckBotTracker:
     """CheckBotTracker"""
@@ -98,6 +104,21 @@ class CheckBotTracker:
         ):
             pass
 
+    def go_to_joint_state(self, joint_pose):
+        move_group = self.move_group
+        joint_goal = move_group.get_current_joint_values()
+        joint_goal[0] = joint_pose[0]
+        joint_goal[1] = joint_pose[1]
+        joint_goal[2] = joint_pose[2]
+        joint_goal[3] = joint_pose[3]
+        joint_goal[4] = joint_pose[4]
+        joint_goal[5] = joint_pose[5]
+
+        move_group.go(joint_goal, wait=True)
+        move_group.stop()
+        current_joints = move_group.get_current_joint_values()
+        return all_close(joint_goal, current_joints, 0.01)
+
     def go_to_pose(self, input_pose):
         if type(input_pose) == list:
             pose = geometry_msgs.msg.Pose()
@@ -141,10 +162,18 @@ class CheckBotTracker:
             print("----------------------------------------------------------")
             print("Press Ctrl-D to exit at any time\n")
 
+            self.go_to_joint_state(HOME_JOINT_POSE)
+            self.go_to_joint_state(POSE_1)
+            self.go_to_joint_state(POSE_2)
+            self.go_to_joint_state(POSE_3)
+            self.go_to_joint_state(POSE_4)
+            self.go_to_joint_state(HOME_JOINT_POSE)
+
             # input("Press `Enter` to begin the checkbot by setting up the moveit_commander ...")
             # print("----------------------------------------------------------")
             # input("Press `Enter` to go to a home pose goal ...")
-            self.go_to_pose(HOME_POSE)
+            # self.go_to_joint_state(HOME_JOINT_POSE)
+            # self.go_to_pose(HOME_POSE)
 
             # input("Press `Enter` to go to a lower goal ...")
             # self.go_to_pose(TARGET_POSE)
