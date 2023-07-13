@@ -22,16 +22,18 @@ def is_feasible(path, customers, distance_matrix):
     if not path:
         return False
     current_time = 0
-    for i in range(len(path) - 1):
-        travel_time = distance_matrix[path[i]-1][path[i+1]-1]
+    eval_path = path.copy()
+    eval_path.append(1)
+    for i in range(len(eval_path) - 1):
+        travel_time = distance_matrix[eval_path[i]-1][eval_path[i+1]-1]
         arrival_time = current_time + travel_time
-        if arrival_time < customers[path[i+1]-1].rdy_time:
-            current_time = customers[path[i+1]-1].rdy_time
+        if arrival_time < customers[eval_path[i+1]-1].rdy_time:
+            current_time = customers[eval_path[i+1]-1].rdy_time
         else:
             current_time = arrival_time
-        if current_time > customers[path[i+1]-1].due_date:
+        if current_time > customers[eval_path[i+1]-1].due_date:
             return False
-        current_time += customers[path[i]-1].serv_time
+        current_time += customers[eval_path[i]-1].serv_time
     return True
     
 # ------ OPTIMIZER CLASS ------
@@ -457,22 +459,25 @@ class Optimizer:
         if not is_feasible(path, customers, self.distance_matrix):
             return math.inf
 
-        for i in range(path_length - 1):
+        eval_path = path.copy()
+        eval_path.append(1)
+
+        for i in range(path_length):
             # Calculate travel time from current customer to next
-            travel_time = self.distance_matrix[path[i]-1][path[i+1]-1]
+            travel_time = self.distance_matrix[eval_path[i]-1][eval_path[i+1]-1]
             # Calculate arrival time at next customer
             arrival_time = current_time + travel_time
 
             # If arrival time is earlier than the ready time, add waiting time to cost
-            if arrival_time < customers[path[i+1]-1].rdy_time: 
-                total_cost += customers[path[i+1]-1].rdy_time - arrival_time
-                current_time = customers[path[i+1]-1].rdy_time
+            if arrival_time < customers[eval_path[i+1]-1].rdy_time: 
+                total_cost += customers[eval_path[i+1]-1].rdy_time - arrival_time
+                current_time = customers[eval_path[i+1]-1].rdy_time
             else:
                 current_time = arrival_time
 
             # Add travel time and service time to total cost
-            total_cost += travel_time + customers[path[i]-1].serv_time
-            current_time += customers[path[i]-1].serv_time
+            total_cost += travel_time + customers[eval_path[i]-1].serv_time
+            current_time += customers[eval_path[i]-1].serv_time
 
         return total_cost
     
@@ -498,8 +503,11 @@ class Optimizer:
         if path_length == 0:
             return math.inf
 
-        for i in range(path_length - 1):
-            total_cost += self.distance_matrix[path[i]-1][path[i+1]-1]
+        eval_path = path.copy()
+        eval_path.append(1)
+
+        for i in range(path_length):
+            total_cost += self.distance_matrix[eval_path[i]-1][eval_path[i+1]-1]
 
         return total_cost
 
@@ -526,24 +534,27 @@ class Optimizer:
         if not is_feasible(path, customers, self.distance_matrix):
             return math.inf
 
-        for i in range(path_length - 1):
+        eval_path = path.copy()
+        eval_path.append(1)
+
+        for i in range(path_length):
             # Calculate travel time from current customer to next
-            travel_time = self.distance_matrix[path[i]-1][path[i+1]-1]
+            travel_time = self.distance_matrix[eval_path[i]-1][eval_path[i+1]-1]
             
             # Calculate arrival time at next customer
             arrival_time = current_time + travel_time
 
             # If arrival time is earlier than the ready time, add waiting time to cost
-            if arrival_time < customers[path[i+1]-1].rdy_time: 
-                total_cost += customers[path[i+1]-1].rdy_time - arrival_time
-                current_time = customers[path[i+1]-1].rdy_time
+            if arrival_time < customers[eval_path[i+1]-1].rdy_time: 
+                total_cost += customers[eval_path[i+1]-1].rdy_time - arrival_time
+                current_time = customers[eval_path[i+1]-1].rdy_time
             else:
                 current_time = arrival_time
 
             # The objective function used in this procedure is the sum of all positive
             # differences between the time to reach each customer and its due date, that is, ∑n i=1 max(0, βi − bi)
-            total_cost += max(0, current_time - customers[path[i+1]-1].due_date)
-            current_time += customers[path[i]-1].serv_time
+            total_cost += max(0, current_time - customers[eval_path[i+1]-1].due_date)
+            current_time += customers[eval_path[i]-1].serv_time
 
         return total_cost    
         

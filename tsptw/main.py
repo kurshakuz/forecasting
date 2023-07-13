@@ -23,7 +23,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='Solves the Time-Dependent Traveling Salesman Problem (TSPTW).',
                                      add_help=True)
     parser.add_argument('-i', '--iter_max', type=int, default=30, help='Maximum number of iterations.')
-    parser.add_argument('-f', '--file_name', type=str, default='./benchmarks/n20w20.002.txt', help='File name of the input data.')
+    parser.add_argument('-f', '--file_name', type=str, default='./benchmarks/n20w20.001.txt', help='File name of the input data.')
     parser.add_argument('-l', '--level_max', type=int, default=8, help='Range of the local search.')
     parser.add_argument('-r', '--rdy', action='store_const', const='rdy', dest='initial_path_type', help='Sets initial path type to "rdy".')
     parser.add_argument('-d', '--due', action='store_const', const='due', dest='initial_path_type', help='Sets initial path type to "due".')
