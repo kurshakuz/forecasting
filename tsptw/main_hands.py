@@ -43,7 +43,7 @@ def parse_arguments():
     return args
 
 
-def hands_tsptw_solver(iter_max, level_max, initial_path_type, preds=None):
+def hands_tsptw_solver(iter_max, level_max, initial_path_type, preds=None, visited_customers=[0, 1, 3]):
     """
     Main function that initiates and solves the TSPTW problem.
     """
@@ -53,12 +53,28 @@ def hands_tsptw_solver(iter_max, level_max, initial_path_type, preds=None):
     #                    206.24173, 149.51596, 205.16443, 215.93907, 205.83598, 144.41257, 205.06213,
     #                    219.77278, 201.92041, 0., 0., 0., 0., 0.]])
 
-    tsptw = TSPTW(iter_max, level_max, initial_path_type, file_name=None, preds=preds)
-    full_plan = np.empty((0, 5))
+    all_customers = [0, 1, 2, 3, 4, 5]
+    visited_size = len(visited_customers) - 1
+    if visited_size == 4:
+        return np.array(list(set(all_customers) - set(visited_customers)))
+
+    tsptw = TSPTW(iter_max, level_max, initial_path_type, file_name=None, preds=preds, visited_customers=visited_customers)
+
+    cust_number = 5 - visited_size
+    full_plan = np.empty((0, cust_number))
+    
+    matched_ids = {}
+    for i, cust in enumerate(tsptw.customers_list[0], 1):
+        matched_ids[i] = cust.id
 
     for customer in tsptw.customers_list:
-        result = tsptw.solve(customer)
-        full_plan = np.vstack((full_plan, result.path))
+        result = tsptw.solve(customer).path
+        if visited_size != 0:
+            result_arranged = []
+            for id in result:
+                result_arranged.append(matched_ids[id])
+            result = result_arranged
+        full_plan = np.vstack((full_plan, result))
 
     return full_plan
 

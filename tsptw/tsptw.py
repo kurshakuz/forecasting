@@ -10,7 +10,7 @@ from hands_helpers import load_customers_from_predictions
 class TSPTW:
     """Solves the Traveling Salesman Problem with Time Windows (TSPTW)."""
 
-    def __init__(self, iter_max, level_max, initial_path_type, file_name=None, preds=None):
+    def __init__(self, iter_max, level_max, initial_path_type, file_name=None, preds=None, visited_customers=[0]):
         """
         Initializes a TSPTW solver.
 
@@ -30,7 +30,15 @@ class TSPTW:
             self.best_route = Route(self.customers)
             self.optimizer.distance_matrix = self.optimizer.calculate_distance_matrix(self.best_route.customers)
         else:
-            self.customers_list = load_customers_from_predictions(preds)
+            customers_list = load_customers_from_predictions(preds)
+            filtered_customer_list = []
+            if visited_customers != []:
+                for customer in customers_list[0]:
+                    if customer.id in visited_customers:
+                        continue
+                    else:
+                        filtered_customer_list.append(customer)
+            self.customers_list = [filtered_customer_list]
             # initialize empty route
             self.best_route = Route(self.customers_list[0])
             # distance matrix is static for all instances
