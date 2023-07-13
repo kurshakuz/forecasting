@@ -7,6 +7,7 @@ import math
 
 # ------ HELPER FUNCTION ------
 
+
 def is_feasible(path, customers, distance_matrix):
     """
     Check the feasibility of a given path.
@@ -35,8 +36,9 @@ def is_feasible(path, customers, distance_matrix):
             return False
         current_time += customers[eval_path[i]-1].serv_time
     return True
-    
+
 # ------ OPTIMIZER CLASS ------
+
 
 class Optimizer:
     def __init__(self, level_max, initial_path_type):
@@ -44,8 +46,8 @@ class Optimizer:
         self.distance_matrix = []
         self.initial_path_type = initial_path_type
 
-    # ------ INITIALIZATION ------        
-    
+    # ------ INITIALIZATION ------
+
     def random_solution(self, shuffle_ids):
         """
         Generate a random solution by shuffling customer ids.
@@ -57,10 +59,10 @@ class Optimizer:
         list: List of shuffled customer ids with depot at the start.
         """
         shuffle_ids = list(shuffle_ids)
-        shuffle_ids.pop(0) # customer 1 is always the 1st
+        shuffle_ids.pop(0)  # customer 1 is always the 1st
         random.shuffle(shuffle_ids)
         return [1] + shuffle_ids
-        
+
     def build_initial_solution(self, route):
         """
         Construct the initial solution based on the defined 'initial_path_type'.
@@ -72,14 +74,16 @@ class Optimizer:
         list: Initial solution as a list of customer ids.
         """
         if self.initial_path_type == 'random':
-            return self.random_solution(list(range(1,len(route.customers)+1)))
+            return self.random_solution(list(range(1, len(route.customers)+1)))
         elif self.initial_path_type == 'rdy':
             # Sort customer IDs by ready time in ascending order
-            sorted_ids = sorted(range(1, len(route.customers) + 1), key=lambda idx: route.customers[idx - 1].rdy_time)
+            sorted_ids = sorted(range(1, len(route.customers) + 1),
+                                key=lambda idx: route.customers[idx - 1].rdy_time)
             return sorted_ids
         elif self.initial_path_type == 'due':
             # Sort customer IDs by due date in __descending__ order
-            sorted_ids = sorted(range(1, len(route.customers) + 1), key=lambda idx: -route.customers[idx - 1].due_date)
+            sorted_ids = sorted(range(1, len(route.customers) + 1),
+                                key=lambda idx: -route.customers[idx - 1].due_date)
             return sorted_ids
 
     def VNS(self, route):
@@ -103,8 +107,10 @@ class Optimizer:
                 solution_found = True
             while not is_feasible(route.path, route.customers, self.distance_matrix) and level < self.level_max:
                 potential_route = self.perform_perturbation(level, route)
-                potential_route.path = self.construction_local_shift(potential_route)
-                best_path = self.construction_choose_better_path(potential_route.path, route.path, route.customers)
+                potential_route.path = self.construction_local_shift(
+                    potential_route)
+                best_path = self.construction_choose_better_path(
+                    potential_route.path, route.path, route.customers)
                 route.path = best_path.copy()
 
                 if self.construction_calculate_objective(route.path, route.customers) == self.construction_calculate_objective(potential_route.path, potential_route.customers):
@@ -122,7 +128,7 @@ class Optimizer:
                     break
         return route
 
-    def build_feasible_solution(self, customers): # VNS - Constructive phase
+    def build_feasible_solution(self, customers):  # VNS - Constructive phase
         """
         Construct a feasible solution using VNS.
 
@@ -136,7 +142,7 @@ class Optimizer:
         feasible_route = self.VNS(feasible_route)
 
         return feasible_route
-        
+
     def calculate_distance_matrix(self, customers):
         """
         Calculate the distance matrix among all customers including the depot.
@@ -151,17 +157,18 @@ class Optimizer:
         locations = [customer.point for customer in customers]
         n = len(ids)
         dist_matrix = np.zeros((n, n))
-    
+
         for i in range(n):
             for j in range(i+1, n):  # We only calculate the upper half of the matrix
                 dist = distance.euclidean(locations[i], locations[j])
                 dist = math.floor(dist)
                 dist_matrix[i, j] = dist
-                dist_matrix[j, i] = dist  # Mirror the value to the other half of the matrix
-        return dist_matrix 
+                # Mirror the value to the other half of the matrix
+                dist_matrix[j, i] = dist
+        return dist_matrix
 
     # ------ SOLUTION GENERATION AND IMPROVEMENT ------
-    
+
     def perform_perturbation(self, level, route):
         """
         Perturb the given route by moving a random customer to a new position.
@@ -188,8 +195,8 @@ class Optimizer:
         # Create a new Route with the perturbed path
         new_route = Route(customers)
         new_route.path = [1] + new_path
-        return new_route        
-       
+        return new_route
+
     def optimization_local_shift(self, path, customers):
         """
         Optimizes a given route path by performing local shift operations.
@@ -202,7 +209,8 @@ class Optimizer:
         list: The optimized path.
         """
         optimizable_path = path.copy()
-        raw_distance = self.optimization_calculate_objective(optimizable_path, customers)
+        raw_distance = self.optimization_calculate_objective(
+            optimizable_path, customers)
 
         for i in range(1, len(optimizable_path)):
             for j in range(1, len(optimizable_path)):
@@ -210,9 +218,10 @@ class Optimizer:
                     # Generate a neighbor solution by performing a 1-shift
                     neighbor_path = optimizable_path.copy()
                     neighbor_path.insert(j, neighbor_path.pop(i))
-                    
+
                     # Evaluate the neighbor solution
-                    neighbor_distance = self.optimization_calculate_objective(neighbor_path, customers)
+                    neighbor_distance = self.optimization_calculate_objective(
+                        neighbor_path, customers)
 
                     # If the neighbor solution is feasible and better than the current solution, update the current solution
                     if neighbor_distance < raw_distance and is_feasible(neighbor_path, customers, self.distance_matrix):
@@ -221,7 +230,7 @@ class Optimizer:
 
         # Return the best list found
         return optimizable_path
-    
+
     def forward_movements(self, path, customer_id):
         """
         Perform a forward shift of a given customer in the path.
@@ -263,7 +272,7 @@ class Optimizer:
             # swap positions with the previous customer in the path
             path[idx], path[idx - 1] = path[idx - 1], path[idx]
         return path
-    
+
     def get_customer_subsets(self, current_path, customers):
         """
         Categorize customers in the current path into violated and non-violated sets based on time constraints.
@@ -281,7 +290,8 @@ class Optimizer:
 
         for i in range(len(current_path) - 1):
             # Calculate travel time from current customer to next
-            travel_time = self.distance_matrix[current_path[i]-1][current_path[i+1]-1]
+            travel_time = self.distance_matrix[current_path[i] -
+                                               1][current_path[i+1]-1]
             # Calculate arrival time at next customer
             arrival_time = current_time + travel_time
 
@@ -293,15 +303,17 @@ class Optimizer:
 
             # If arrival time is later than the due date, the route is not feasible
             if current_time > customers[current_path[i+1]-1].due_date:
-                violated_customers.append(copy.deepcopy(customers[current_path[i+1]-1]))
+                violated_customers.append(
+                    copy.deepcopy(customers[current_path[i+1]-1]))
             else:
-                non_violated_customers.append(copy.deepcopy(customers[current_path[i+1]-1]))
+                non_violated_customers.append(
+                    copy.deepcopy(customers[current_path[i+1]-1]))
 
             # Add service time to current time
             current_time += customers[current_path[i]-1].serv_time
 
         return violated_customers, non_violated_customers
-        
+
     def construction_local_shift(self, route):
         """
         Perform local shift operations to construct a feasible solution.
@@ -315,60 +327,69 @@ class Optimizer:
         # Make a copy of current route
         current_path = route.path.copy()
         # Define the current solution
-        current_cost = self.construction_calculate_objective(current_path, route.customers)
+        current_cost = self.construction_calculate_objective(
+            current_path, route.customers)
 
         # Identify violated and non-violated customers
-        violated_customers, non_violated_customers = self.get_customer_subsets(current_path, route.customers)
+        violated_customers, non_violated_customers = self.get_customer_subsets(
+            current_path, route.customers)
 
         current_path.pop(0)
-            
+
         # Perform 1-shift movement for violated customers, moving them backward
         for customer in violated_customers:
             new_path = self.backward_movements(current_path, customer.id)
             full_new_path = [1] + new_path.copy()
-            new_cost = self.construction_calculate_objective(full_new_path, route.customers)
+            new_cost = self.construction_calculate_objective(
+                full_new_path, route.customers)
             if new_cost < current_cost:
                 current_path = new_path.copy()
                 current_cost = new_cost
 
         # Identify violated and non-violated customers
-        violated_customers, non_violated_customers = self.get_customer_subsets(current_path, route.customers)
-        
+        violated_customers, non_violated_customers = self.get_customer_subsets(
+            current_path, route.customers)
+
         # Perform 1-shift movement for non-violated customers, moving them forward
         for customer in non_violated_customers:
             new_path = self.forward_movements(current_path, customer.id)
             full_new_path = [1] + new_path.copy()
-            new_cost = self.construction_calculate_objective(full_new_path, route.customers)
+            new_cost = self.construction_calculate_objective(
+                full_new_path, route.customers)
             if new_cost < current_cost:
                 current_path = new_path.copy()
                 current_cost = new_cost
-        
+
         # Identify violated and non-violated customers
-        violated_customers, non_violated_customers = self.get_customer_subsets(current_path, route.customers)
-        
+        violated_customers, non_violated_customers = self.get_customer_subsets(
+            current_path, route.customers)
+
         # Perform 1-shift movement for non-violated customers, moving them backward
         for customer in non_violated_customers:
             new_path = self.backward_movements(current_path, customer.id)
             full_new_path = [1] + new_path.copy()
-            new_cost = self.construction_calculate_objective(full_new_path, route.customers)
+            new_cost = self.construction_calculate_objective(
+                full_new_path, route.customers)
             if new_cost < current_cost:
                 current_path = new_path.copy()
                 current_cost = new_cost
-        
+
         # Identify violated and non-violated customers
-        violated_customers, non_violated_customers = self.get_customer_subsets(current_path, route.customers)
-        
+        violated_customers, non_violated_customers = self.get_customer_subsets(
+            current_path, route.customers)
+
         # Perform 1-shift movement for violated customers, moving them forward
         for customer in violated_customers:
             new_path = self.forward_movements(current_path, customer.id)
             full_new_path = [1] + new_path.copy()
-            new_cost = self.construction_calculate_objective(full_new_path, route.customers)
+            new_cost = self.construction_calculate_objective(
+                full_new_path, route.customers)
             if new_cost < current_cost:
                 current_path = new_path.copy()
                 current_cost = new_cost
-                
+
         return [1] + current_path
-    
+
     def local_2opt(self, path, customers):
         """
         Perform 2-opt local search to improve the current solution.
@@ -395,7 +416,7 @@ class Optimizer:
                 # For each subsequent customer in the path
                 for j in range(i + 1, len(path)):
                     # Skip if the two customers are adjacent
-                    if j - i == 1: 
+                    if j - i == 1:
                         continue
 
                     # Make a copy of the current path
@@ -403,9 +424,11 @@ class Optimizer:
 
                     # Perform 2-opt swap: reverse the section of the path between customer i and j
                     new_path[i:j] = path[j - 1:i - 1:-1]
-                    
-                    new_distance = self.optimization_calculate_objective(new_path, customers)
-                    best_distance = self.optimization_calculate_objective(best_path, customers)
+
+                    new_distance = self.optimization_calculate_objective(
+                        new_path, customers)
+                    best_distance = self.optimization_calculate_objective(
+                        best_path, customers)
                     if new_distance < best_distance:
                         best_path = new_path.copy()
                         improved = True
@@ -415,8 +438,8 @@ class Optimizer:
 
         # Return the best path found
         return path
-    
-    def VND(self, route, customers): # VND (Algo 4)
+
+    def VND(self, route, customers):  # VND (Algo 4)
         """
         Perform Variable Neighborhood Descent (VND) to find the best local optimal solution.
 
@@ -433,9 +456,9 @@ class Optimizer:
             new_path = route.path.copy()
             route.path = self.local_2opt(route.path, customers)
         return route.path
-        
-    # ------ COST AND OBJECTIVE FUNCTION CALCULATION ------    
-    
+
+    # ------ COST AND OBJECTIVE FUNCTION CALCULATION ------
+
     def calculate_cost(self, path, customers):
         """
         Calculate the total cost of a path, taking into account travel, service and waiting times.
@@ -464,13 +487,15 @@ class Optimizer:
 
         for i in range(path_length):
             # Calculate travel time from current customer to next
-            travel_time = self.distance_matrix[eval_path[i]-1][eval_path[i+1]-1]
+            travel_time = self.distance_matrix[eval_path[i] -
+                                               1][eval_path[i+1]-1]
             # Calculate arrival time at next customer
             arrival_time = current_time + travel_time
 
             # If arrival time is earlier than the ready time, add waiting time to cost
-            if arrival_time < customers[eval_path[i+1]-1].rdy_time: 
-                total_cost += customers[eval_path[i+1]-1].rdy_time - arrival_time
+            if arrival_time < customers[eval_path[i+1]-1].rdy_time:
+                total_cost += customers[eval_path[i+1] -
+                                        1].rdy_time - arrival_time
                 current_time = customers[eval_path[i+1]-1].rdy_time
             else:
                 current_time = arrival_time
@@ -480,7 +505,7 @@ class Optimizer:
             current_time += customers[eval_path[i]-1].serv_time
 
         return total_cost
-    
+
     def optimization_calculate_objective(self, path, customers):
         """
         Calculate the total cost of a path based on the sum of the Euclidean distances.
@@ -507,7 +532,8 @@ class Optimizer:
         eval_path.append(1)
 
         for i in range(path_length):
-            total_cost += self.distance_matrix[eval_path[i]-1][eval_path[i+1]-1]
+            total_cost += self.distance_matrix[eval_path[i] -
+                                               1][eval_path[i+1]-1]
 
         return total_cost
 
@@ -539,27 +565,30 @@ class Optimizer:
 
         for i in range(path_length):
             # Calculate travel time from current customer to next
-            travel_time = self.distance_matrix[eval_path[i]-1][eval_path[i+1]-1]
-            
+            travel_time = self.distance_matrix[eval_path[i] -
+                                               1][eval_path[i+1]-1]
+
             # Calculate arrival time at next customer
             arrival_time = current_time + travel_time
 
             # If arrival time is earlier than the ready time, add waiting time to cost
-            if arrival_time < customers[eval_path[i+1]-1].rdy_time: 
-                total_cost += customers[eval_path[i+1]-1].rdy_time - arrival_time
+            if arrival_time < customers[eval_path[i+1]-1].rdy_time:
+                total_cost += customers[eval_path[i+1] -
+                                        1].rdy_time - arrival_time
                 current_time = customers[eval_path[i+1]-1].rdy_time
             else:
                 current_time = arrival_time
 
             # The objective function used in this procedure is the sum of all positive
             # differences between the time to reach each customer and its due date, that is, ∑n i=1 max(0, βi − bi)
-            total_cost += max(0, current_time - customers[eval_path[i+1]-1].due_date)
+            total_cost += max(0, current_time -
+                              customers[eval_path[i+1]-1].due_date)
             current_time += customers[eval_path[i]-1].serv_time
 
-        return total_cost    
-        
-    # ------ PATH SELECTION ------ 
-    
+        return total_cost
+
+    # ------ PATH SELECTION ------
+
     def construction_choose_better_path(self, path1, path2, customers):
         """
         Compare two paths and return the one with the lower cost based on a construction objective function.
@@ -594,37 +623,39 @@ class Optimizer:
         list: Path with the lower cost.
         """
         # Calculate the costs of both paths
-        total_cost_path1 = self.optimization_calculate_objective(path1, customers)
-        total_cost_path2 = self.optimization_calculate_objective(path2, customers)
+        total_cost_path1 = self.optimization_calculate_objective(
+            path1, customers)
+        total_cost_path2 = self.optimization_calculate_objective(
+            path2, customers)
 
         # Return the path with the lower cost
         if total_cost_path1 < total_cost_path2:
             return path1
         else:
             return path2
-            
+
     def choose_better_path(self, path1, path2, customers):
         """
         This function chooses the better of two paths based on their total cost.
-        
+
         Parameters:
         path1 (list): The first path.
         path2 (list): The second path.
         customers (list): The customers to be served.
-        
+
         Returns:
         list: The path with the lower total cost.
         """
         # Calculate the costs of both paths
         cost_path1 = self.calculate_cost(path1, customers)
         cost_path2 = self.calculate_cost(path2, customers)
-        
+
         # Return the path with the lower cost
         return path1 if cost_path1 < cost_path2 else path2
-            
-    # ------ MAIN OPTIMIZATION ALGORITHM ------        
-           
-    def GVNS(self, route): # GVNS (Algo 3)
+
+    # ------ MAIN OPTIMIZATION ALGORITHM ------
+
+    def GVNS(self, route):  # GVNS (Algo 3)
         """
         Perform the General Variable Neighborhood Search (GVNS) optimization algorithm.
 
@@ -641,8 +672,10 @@ class Optimizer:
             prime_potential_route = copy.deepcopy(route)
             star_potential_route = copy.deepcopy(route)
             prime_potential_route = self.perform_perturbation(level, route)
-            star_potential_route.path = self.VND(prime_potential_route, prime_potential_route.customers) #see Algo 4
-            star_potential_cost = self.calculate_cost(star_potential_route.path, star_potential_route.customers)
+            star_potential_route.path = self.VND(
+                prime_potential_route, prime_potential_route.customers)  # see Algo 4
+            star_potential_cost = self.calculate_cost(
+                star_potential_route.path, star_potential_route.customers)
             route_cost = self.calculate_cost(route.path, route.customers)
 
             if star_potential_cost < route_cost:

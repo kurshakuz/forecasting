@@ -28,13 +28,15 @@ class TSPTW:
         if file_name is not None:
             self.customers = self.load_customers_from_file(file_name)
             self.best_route = Route(self.customers)
-            self.optimizer.distance_matrix = self.optimizer.calculate_distance_matrix(self.best_route.customers)
+            self.optimizer.distance_matrix = self.optimizer.calculate_distance_matrix(
+                self.best_route.customers)
         else:
             self.customers_list = load_customers_from_predictions(preds)
             # initialize empty route
             self.best_route = Route(self.customers_list[0])
             # distance matrix is static for all instances
-            self.optimizer.distance_matrix = self.optimizer.calculate_distance_matrix(self.best_route.customers)
+            self.optimizer.distance_matrix = self.optimizer.calculate_distance_matrix(
+                self.best_route.customers)
 
     def solve(self, customers):
         """
@@ -49,7 +51,8 @@ class TSPTW:
             iter_count += 1
             route = self.optimizer.build_feasible_solution(customers)
             route = self.optimizer.GVNS(route)
-            self.best_route.path = copy.deepcopy(self.optimizer.choose_better_path(route.path, self.best_route.path, customers))
+            self.best_route.path = copy.deepcopy(self.optimizer.choose_better_path(
+                route.path, self.best_route.path, customers))
 
         return self.best_route
 
@@ -69,13 +72,16 @@ class TSPTW:
             start_line = TSPTW.find_data_start(lines)
 
             if start_line is None:
-                raise ValueError("Could not find the start of the data in the file.")
+                raise ValueError(
+                    "Could not find the start of the data in the file.")
 
             customers = []
             for line in lines[start_line:]:
-                id, point, rdy_time, due_date, serv_time = TSPTW.parse_data_line(line)
+                id, point, rdy_time, due_date, serv_time = TSPTW.parse_data_line(
+                    line)
                 if id != 999:
-                    customers.append(Customer(id, point, rdy_time, due_date, serv_time))
+                    customers.append(
+                        Customer(id, point, rdy_time, due_date, serv_time))
         return customers
 
     @staticmethod
