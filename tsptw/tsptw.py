@@ -38,7 +38,7 @@ class TSPTW:
             self.optimizer.distance_matrix = self.optimizer.calculate_distance_matrix(
                 self.best_route.customers)
 
-    def solve(self, customers):
+    def solve(self, customers, previous_solution=None):
         """
         Solves the TSPTW.
 
@@ -49,7 +49,10 @@ class TSPTW:
         while iter_count < self.iter_max:
             # print(f"Iteration {iter_count + 1} of {self.iter_max}")
             iter_count += 1
-            route = self.optimizer.build_feasible_solution(customers)
+            if previous_solution is not None and len(previous_solution.path) != 0:
+                route = previous_solution
+            else:
+                route = self.optimizer.build_feasible_solution(customers)
             route = self.optimizer.GVNS(route)
             self.best_route.path = copy.deepcopy(self.optimizer.choose_better_path(
                 route.path, self.best_route.path, customers))

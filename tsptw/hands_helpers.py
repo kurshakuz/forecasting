@@ -29,7 +29,6 @@ def find_intersecting_rectangles(rectangles, squares):
         square_right = square.x + square.width
         square_top = square.y
         square_bottom = square.y + square.height
-        # print(square_left, square_right, square_top, square_bottom)
 
         for rectangle in rectangles:
             rect_left = rectangle.x
@@ -122,8 +121,8 @@ def plot_hands(rectangles, squares, intersecting):
     plt.xlim([0, 1600])
     plt.ylim([320, 0])
 
+    # plot rectangles
     for rectangle in rectangles:
-        # plot rectangles
         plt.gca().add_patch(Rectangle((rectangle.x, rectangle.y), rectangle.width,
                                       rectangle.height, linewidth=1, edgecolor='g', facecolor='none'))
 
@@ -131,18 +130,19 @@ def plot_hands(rectangles, squares, intersecting):
     for i in range(4):
         plt.plot([320*(i+1), 320*(i+1)], [0, 320], color="black", linewidth=1)
 
+    # plot squares
     for square in squares:
         plt.gca().add_patch(Rectangle((square.x, square.y), square.width,
                                       square.height, linewidth=1, edgecolor='b', facecolor='none'))
 
-    # Plotting the intersecting rectangles
+    # plotting the intersecting rectangles
     for rectangle in intersecting:
         intersect_rect = Rectangle((rectangle.x, rectangle.y), rectangle.width,
                                    rectangle.height, edgecolor='r', facecolor='none')
         plt.gca().add_patch(intersect_rect)
 
-    # plt.xticks([])
-    # plt.yticks([])
+    plt.xticks([])
+    plt.yticks([])
     plt.show()
 
 
@@ -151,19 +151,15 @@ def generate_tsptw_instances(frame_width, num_regions, rectangles, intersecting)
     instances = []
     for i in range(5):
         id = 1
-        # customers.append(Customer(id, point, rdy_time, due_date, serv_time))
         customers = []
-        customers.append(Customer(id, (-40, 140), 0 *
+        customers.append(Customer(id, (160, 80), 0 *
                          time_scaler, 2*time_scaler, 0.0))
         id += 1
         for rectangle in rectangles[i*num_regions:(i+1)*num_regions]:
-            # print(rectangle.center)
             center_x = rectangle.center[0] - rectangle.frame_id*frame_width
             center_y = rectangle.center[1]
 
             if rectangle in intersecting:
-                # print(center_x)
-                # print(rectangle)
                 customers.append(
                     Customer(id, (center_x, center_y), 0.5*time_scaler, 2*time_scaler, 0))
             else:

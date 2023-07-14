@@ -23,10 +23,8 @@ class Customer:
 
     def __str__(self):
         """Returns a simple string representation of the customer."""
-        # return f"cust-{self.id}"
         return f"{(self.id, self.point, self.rdy_time, self.due_date, self.serv_time)}"
 
     def __repr__(self):
         """Returns a more detailed string representation of the customer."""
-        # return f"cust-{self.id}"
         return f"{(self.id, self.point, self.rdy_time, self.due_date, self.serv_time)}"
