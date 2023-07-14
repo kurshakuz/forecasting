@@ -1,4 +1,4 @@
-# ECCV Solution workspace
+# Uniformer Training and Inference
 
 ## Update json and model paths
 
