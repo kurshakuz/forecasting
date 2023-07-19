@@ -1,3 +1,0 @@
-<launch>
-  <node name="bot_interface" pkg="bot_interface" type="bot_interface.py"/>
-</launch>

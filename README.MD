@@ -16,5 +16,8 @@ The `dynamic_vns` folder contains the implementation of the DynamicVNS algorithm
 ## UniFormer
 The `uniformer` folder contains the implementation, training, and inference pipelines of the UniFormer model. Setting up instructions and script configurations are contained inside the `THESIS.md` file.
 
+## ROS Communication and Simulation Environment
+The `forecasting_ws` folder contains the implementation of the ROS communication and simulation environment. `forecasting_tsptw` folder contains files for the ROS-based model inference, D-TSPTW problem formulation converter, and connection to the DynamicVNS heuristic algorithm. The `universal_robot/ur_gazebo` contains the simulation environment for the UR10e robot. Setting up instructions are contained inside the `THESIS.md` file.
+
 ## UniFormerV2
 The `uniformer_v2` folder contains the implementation, training, and inference pipelines of the UniFormerV2 model that are based on EgoVLP pretrained transformer backbones. This setup and corresponding experiments are not mentioned in the thesis, due to low performance.
